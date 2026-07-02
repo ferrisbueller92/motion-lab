@@ -49,6 +49,7 @@
   #driver { height: 1500vh; }   /* scroll length — the film's runtime */
 
   .layer { position: absolute; inset: 0; opacity: 0; will-change: opacity, transform; }
+  .layer[data-beat="bay"] { transform-origin: 62% 42%; }   /* match-move: push toward the anchored yacht into the wake cut */
   .layer video, .layer img.fallback {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   }
@@ -370,7 +371,7 @@
     // outgoing layers push in slightly (depth) and lift bright through the cut (reel grammar)
     const cut1 = seg(p, 0.105, 0.135), cut2 = seg(p, 0.225, 0.255);
     setLayer('cove', coveO, 1 + cut1 * 0.05, 1 + cut1 * (1 - cut1) * 0.9);
-    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.105, 0.150)) * 0.04 + cut2 * 0.05, 1 + cut2 * (1 - cut2) * 0.9);
+    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.105, 0.150)) * 0.04 + easeIO(cut2) * 0.14, 1 + cut2 * (1 - cut2) * 0.9);
     setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.225, 0.270)) * 0.04);
     // luminance haze peaks mid-dissolve so the blend never reads as double-exposure
     veilLumen.style.opacity = (0.34 * Math.max(cut1 * (1 - cut1) * 4 * 0.25, cut2 * (1 - cut2) * 4 * 0.25) * 4).toFixed(3);
