@@ -75,8 +75,8 @@
   .scroll-cue::after { content: ""; width: 1px; height: 34px; background: linear-gradient(180deg, currentColor, transparent); }
 
   .ghost-name { left: 0; right: 0; top: 38vh; text-align: center; }
-  .ghost-name .display { font-size: clamp(64px, 9vw, 140px); line-height: 1; }
-  .ghost-name .eyebrow { font-size: 10px; letter-spacing: .5em; margin-bottom: 18px; opacity: .8; }
+  .ghost-name .display { font-size: clamp(64px, 9vw, 140px); line-height: 1; text-shadow: 0 2px 44px rgba(10,16,20,.4); }
+  .ghost-name .eyebrow { font-size: 11px; letter-spacing: .52em; margin-bottom: 18px; opacity: .95; text-shadow: 0 1px 18px rgba(10,16,20,.5); }
 
   .specs { left: 48px; bottom: 16vh; display: flex; gap: 64px; }
   .spec .num { font-family: var(--serif); font-size: clamp(34px, 3.6vw, 56px); }
@@ -174,6 +174,11 @@
   </div>
   <div class="layer" data-beat="saloon">
     <video muted loop playsinline preload="metadata" poster="assets/poster-saloon.jpg" src="assets/beat-saloon.mp4"></video>
+    <div class="tint"></div>
+  </div>
+  <div class="layer" data-beat="jump">
+    <!-- plays ONCE per entry and holds the splash-rings end frame (no loop: a repeating jumper breaks the story) -->
+    <video muted playsinline preload="metadata" src="assets/beat-jump.mp4"></video>
     <div class="tint"></div>
   </div>
   <div class="layer" data-beat="splash">
@@ -343,7 +348,7 @@
     el.style.filter = bright > 1.001 ? `brightness(${bright.toFixed(3)})` : '';
     const v = q('video', el);
     if (v && !v.error && v.readyState >= 2) {
-      if (o > 0.02 && v.paused) v.play().catch(() => {});
+      if (o > 0.02 && v.paused && !v.ended) v.play().catch(() => {});
       else if (o <= 0.02 && !v.paused) v.pause();
     }
   };
@@ -415,7 +420,7 @@
     if (p > 0.01) { warm('cove-bay', B); warm('bay', L); warm('bay-wake', B); }
     if (p > 0.12) warm('wake', L);
     if (p > 0.28) warm('saloon', L);
-    if (p > 0.72) warm('splash', L);
+    if (p > 0.70) { warm('jump', L); warm('splash', L); }
   };
 
   const conduct = (p) => {
@@ -443,7 +448,7 @@
 
     // --- dip to dark, into the saloon
     veilDark.style.opacity = band(p, 0.345, 0.362, 0.368, 0.385).toFixed(3);
-    const saloonO = band(p, 0.362, 0.385, 2, 3);   // stays under the curtain
+    const saloonO = band(p, 0.362, 0.385, 0.520, 0.560);   // exits under the curtain — else it ghosts through later beats
     setLayer('saloon', saloonO, 1.03 - easeIO(seg(p, 0.362, 0.42)) * 0.03);
     // craft copy enters over the END of the wake beat and rides the dip into the saloon
     setCopy('saloon', band(p, 0.322, 0.352, 0.462, 0.492));
@@ -465,12 +470,18 @@
       deckDots[i].classList.toggle('on', p >= c0 && p < c0 + cardSpan + (i === 3 ? 1 : 0));
     });
 
-    // --- dip through white into the splash
-    veilLight.style.opacity = band(p, 0.810, 0.832, 0.838, 0.862).toFixed(3);
+    // --- dip through white: the JUMP (above water), then under with the splash
+    veilLight.style.opacity = band(p, 0.795, 0.817, 0.823, 0.847).toFixed(3);
     // curtain leaves upward while the white veil covers the cut
-    if (p > 0.810) editorial.style.transform = `translateY(${(-easeIO(seg(p, 0.810, 0.850)) * 100).toFixed(2)}%)`;
-    setLayer('splash', band(p, 0.826, 0.850, 2, 3), 1.02 - easeIO(seg(p, 0.826, 0.90)) * 0.02);
-    setCopy('payoff', band(p, 0.856, 0.888, 2, 3), 30);
+    if (p > 0.795) editorial.style.transform = `translateY(${(-easeIO(seg(p, 0.795, 0.835)) * 100).toFixed(2)}%)`;
+    // jump must always play leap→splash in order: restart the clip each time its band opens
+    const jumpO = band(p, 0.812, 0.836, 0.874, 0.898);
+    const jumpV = q('video', L.jump);
+    if (jumpO > 0.02 && !conduct.jumpWasOn && jumpV && !jumpV.error && jumpV.readyState >= 2) jumpV.currentTime = 0;
+    conduct.jumpWasOn = jumpO > 0.02;
+    setLayer('jump', jumpO);
+    setLayer('splash', band(p, 0.874, 0.898, 2, 3), 1.02 - easeIO(seg(p, 0.874, 0.94)) * 0.02);
+    setCopy('payoff', band(p, 0.906, 0.934, 2, 3), 30);
 
     // --- end card: fades over the underwater with a slow settle
     const endK = band(p, 0.955, 0.985, 2, 3);
