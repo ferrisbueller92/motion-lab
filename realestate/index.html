@@ -277,6 +277,7 @@
     var b=pick(i+1);
     if(b&&f>0.03) drawBmp(b,f);                      // sub-frame crossfade — motion between frames
     window.__scrub.drawn=i;
+    window.__scrub.tier=(a===bitmaps[i])?'full':'preview';
   }
   function resize(){
     var dpr=Math.min(window.devicePixelRatio||1,2);
@@ -284,27 +285,35 @@
     canvas.height=Math.round(canvas.clientHeight*dpr);
     draw(cur);
   }
-  var blobs=new Array(COUNT);
+  var blobs=new Array(COUNT), ctl={};
   function load(i){
     if(i<0||i>COUNT-1||bitmaps[i]||pending[i]) return Promise.resolve(null);
     pending[i]=1;
-    var src=blobs[i]?Promise.resolve(blobs[i])
-      :fetch(url(i)).then(function(r){return r.blob();}).then(function(bl){blobs[i]=bl;return bl;});
+    var src;
+    if(blobs[i]) src=Promise.resolve(blobs[i]);
+    else{
+      var c=new AbortController(); ctl[i]=c;
+      src=fetch(url(i),{signal:c.signal}).then(function(r){return r.blob();})
+        .then(function(bl){blobs[i]=bl;delete ctl[i];return bl;});
+    }
     return src.then(function(bl){return createImageBitmap(bl);})
       .then(function(bm){bitmaps[i]=bm;decoded++;pending[i]=0;return bm;})
-      .catch(function(){pending[i]=0;return null;});
+      .catch(function(){pending[i]=0;delete ctl[i];return null;});
   }
-  /* preloader gate: pull every frame's BYTES down before the scrub starts (decode stays windowed) */
-  function prefetchAll(onProgress){
-    var next=0, done=0, workers=[];
+  /* streaming loader: gate on previews + the opening stretch, stream the rest behind the scroll */
+  function fetchBlob(i){
+    if(blobs[i]) return Promise.resolve();
+    return fetch(url(i)).then(function(r){return r.blob();})
+      .then(function(bl){blobs[i]=bl;}).catch(function(){});
+  }
+  function fetchRange(from,to,conc,onOne){
+    var next=from, workers=[];
     function pump(){
-      if(next>=COUNT) return Promise.resolve();
+      if(next>to) return Promise.resolve();
       var i=next++;
-      var p=blobs[i]?Promise.resolve():fetch(url(i)).then(function(r){return r.blob();})
-        .then(function(bl){blobs[i]=bl;}).catch(function(){});
-      return p.then(function(){ done++; onProgress(done/COUNT); return pump(); });
+      return fetchBlob(i).then(function(){ if(onOne)onOne(); return pump(); });
     }
-    for(var w=0;w<10;w++) workers.push(pump());
+    for(var w=0;w<(conc||8);w++) workers.push(pump());
     return Promise.all(workers);
   }
   function loadPrev(i){
@@ -333,14 +342,20 @@
     }
     if(worst>=0){ if(bitmaps[worst].close)bitmaps[worst].close(); bitmaps[worst]=null; decoded--; }
   }
-  var prevDone=!PREV_DIR;
   function ensureWindow(center,dir){
     var ahead=56, behind=16;
     var from=Math.max(0,center-(dir<0?ahead:behind));
     var to=Math.min(COUNT-1,center+(dir<0?behind:ahead));
+    // abort network fetches for frames the playhead has left behind — the frame
+    // under the user's eyes must win the bandwidth race, not queue behind stale ones
+    for(var j in ctl){
+      if(Math.abs(+j-center)>40){ ctl[j].abort(); delete ctl[j]; pending[+j]=0; }
+    }
+    var inflight=Object.keys(ctl).length;
     for(var i=from;i<=to;i++){
-      loadPrev(i);                        // previews near the playhead jump the sweep queue
-      if(prevDone) load(i);               // full-res only once the cheap tier is complete
+      loadPrev(i);
+      if(blobs[i]) load(i);                                   // bytes local: decode is cheap, always
+      else if(Math.abs(i-center)<=12&&inflight<8){ load(i); inflight++; }
     }
     evict(center); evict(center);
   }
@@ -424,28 +439,35 @@
       loader.classList.add('done');
       document.body.classList.remove('gated');
       window.scrollTo(0,0);
-      preload();                                    // decode window + previews (from cached bytes if gated fully)
+      hero.classList.add('ready'); draw(cur); enter();
+      fetchRange(0,COUNT-1,6);                      // stream every remaining frame behind the scroll
     }
-    if(lenis){}                                     // lenis reads native scroll; overflow:hidden gates it
     setTimeout(function(){skip.classList.add('show');},6000);
     skip.addEventListener('click',openGate);
     loadPrev(0).then(function(){draw(0);hero.classList.add('ready');});   // something behind the fade
-    prefetchAll(function(f){
-      fill.style.width=(f*97)+'%';
-      pct.textContent=Math.round(f*97)+'% — PREPARING THE EXPERIENCE';
-    }).then(function(){
-      // pre-decode the sparse lattice + opening window so the first scrub lands on full-res
+    /* gate = ALL previews (2MB, whole scrub visible) + first 60 full frames (~5MB, sharp opening).
+       everything else streams in the background while the user scrolls. */
+    var GATE_FULL=Math.min(60,COUNT), gateTotal=COUNT+GATE_FULL, gateDone=0;
+    function bump(){
+      gateDone++;
+      var f=Math.min(1,gateDone/gateTotal);
+      fill.style.width=(f*100)+'%';
+      pct.textContent=Math.round(f*100)+'% — PREPARING THE EXPERIENCE';
+    }
+    var sweepPrev=(function sweep(from){
+      if(from>=COUNT)return Promise.resolve();
+      var batch=[];
+      for(var i=from;i<Math.min(from+24,COUNT);i++) batch.push(loadPrev(i).then(bump));
+      return Promise.all(batch).then(function(){return sweep(from+24);});
+    })(0);
+    Promise.all([sweepPrev, fetchRange(0,GATE_FULL-1,8,bump)]).then(function(){
       var warm=[];
-      for(var k=0;k<COUNT;k+=KEY_STRIDE){ keyframes[k]=1; warm.push(load(k)); }
-      for(var i=0;i<16;i++) warm.push(load(i));
-      keyframes[COUNT-1]=1; warm.push(load(COUNT-1));
+      for(var i=0;i<24;i++) warm.push(load(i));     // decode the opening — instant sharp start
+      for(var k=0;k<COUNT;k+=KEY_STRIDE) keyframes[k]=1;
+      keyframes[COUNT-1]=1;
       return Promise.all(warm);
-    }).then(function(){
-      fill.style.width='100%';
-      pct.textContent='100% — PREPARING THE EXPERIENCE';
-      setTimeout(openGate,250);
-    });
-    setTimeout(openGate,45000);                     // hard failsafe: never trap the user
+    }).then(openGate);
+    setTimeout(openGate,30000);                     // hard failsafe: never trap the user
   })();
   requestAnimationFrame(tick);
 
