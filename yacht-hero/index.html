@@ -163,19 +163,29 @@
     <div class="tint"></div>
   </div>
   <div class="layer" data-beat="bay">
-    <video muted loop playsinline preload="auto" poster="assets/poster-bay.jpg" src="assets/beat-bay.mp4"></video>
+    <video muted loop playsinline preload="metadata" poster="assets/poster-bay.jpg" src="assets/beat-bay.mp4"></video>
     <div class="tint"></div>
   </div>
   <div class="layer" data-beat="wake">
-    <video muted loop playsinline preload="auto" poster="assets/poster-wake.jpg" src="assets/beat-wake.mp4"></video>
+    <video muted loop playsinline preload="metadata" poster="assets/poster-wake.jpg" src="assets/beat-wake.mp4"></video>
     <div class="tint"></div>
   </div>
   <div class="layer" data-beat="saloon">
-    <video muted loop playsinline preload="auto" poster="assets/poster-saloon.jpg" src="assets/beat-saloon.mp4"></video>
+    <video muted loop playsinline preload="metadata" poster="assets/poster-saloon.jpg" src="assets/beat-saloon.mp4"></video>
     <div class="tint"></div>
   </div>
   <div class="layer" data-beat="splash">
-    <video muted loop playsinline preload="auto" poster="assets/poster-splash.jpg" src="assets/beat-splash.mp4"></video>
+    <video muted loop playsinline preload="metadata" poster="assets/poster-splash.jpg" src="assets/beat-splash.mp4"></video>
+    <div class="tint"></div>
+  </div>
+
+  <!-- scrubbed bridge shots: continuous camera moves that carry the two hard cuts -->
+  <div class="layer" data-bridge="cove-bay">
+    <video muted playsinline preload="metadata" src="assets/bridge-cove-bay.mp4"></video>
+    <div class="tint"></div>
+  </div>
+  <div class="layer" data-bridge="bay-wake">
+    <video muted playsinline preload="metadata" src="assets/bridge-bay-wake.mp4"></video>
     <div class="tint"></div>
   </div>
 
@@ -295,7 +305,21 @@
   const q = (s, r = document) => r.querySelector(s);
   const qa = (s, r = document) => [...r.querySelectorAll(s)];
 
-  const L = {}; qa('.layer').forEach(el => L[el.dataset.beat] = el);
+  const L = {}; qa('.layer[data-beat]').forEach(el => L[el.dataset.beat] = el);
+  const B = {}; qa('.layer[data-bridge]').forEach(el => B[el.dataset.bridge] = el);
+  // a bridge is usable once its video can seek; otherwise the plain dissolve carries the cut
+  const bridgeReady = (name) => { const v = q('video', B[name]); return v && !v.error && v.readyState >= 2 && v.duration > 0; };
+  const setBridge = (name, k) => {   // k: 0..1 through the cut; <0 hides
+    const el = B[name]; if (!el) return 0;
+    const v = q('video', el);
+    if (k < 0 || k > 1 || !bridgeReady(name)) { el.style.opacity = 0; return 0; }
+    // feathered edges: bridge owns the middle of the cut at FULL opacity (translucent whoosh reads ghosty)
+    const o = clamp(k / 0.10, 0, 1) * (1 - clamp((k - 0.90) / 0.10, 0, 1));
+    el.style.opacity = o.toFixed(3);
+    const t = k * (v.duration - 0.05);
+    if (Math.abs(v.currentTime - t) > 0.03) v.currentTime = t;
+    return o;
+  };
   const C = {}; qa('.copy').forEach(el => C[el.dataset.copy] = el);
   const cards = qa('.card');
   const deckDots = qa('#deckProgress i');
@@ -363,24 +387,53 @@
   ================================================================ */
   let target = 0, current = 0;
 
+  // scroll-driven warm-up: begin buffering the next scene before it's needed
+  const warmed = new Set();
+  const warm = (key, store) => {
+    if (warmed.has(key)) return;
+    const root = store[key]; const v = root && q('video', root);
+    if (!v) return;
+    warmed.add(key);
+    if (store === B) {
+      // scrubbed bridges need the WHOLE file: preload='auto' is only a hint the
+      // browser ignores — fetch to a blob so every seek is instant and guaranteed
+      fetch(v.currentSrc || v.src)
+        .then(r => r.ok ? r.blob() : Promise.reject())
+        .then(bl => { v.src = URL.createObjectURL(bl); v.load(); })
+        .catch(() => {});
+    } else {
+      v.preload = 'auto';
+      if (v.readyState < 2) v.load();
+    }
+  };
+  const warmup = (p) => {
+    if (p > 0.01) { warm('cove-bay', B); warm('bay', L); warm('bay-wake', B); }
+    if (p > 0.12) warm('wake', L);
+    if (p > 0.28) warm('saloon', L);
+    if (p > 0.72) warm('splash', L);
+  };
+
   const conduct = (p) => {
-    // --- Act I: three water beats with designed dissolves
-    const coveO = band(p, -1, 0, 0.105, 0.135);
-    const bayO  = band(p, 0.105, 0.135, 0.225, 0.255);
-    const wakeO = band(p, 0.225, 0.255, 0.345, 0.372);
-    // outgoing layers push in slightly (depth) and lift bright through the cut (reel grammar)
-    const cut1 = seg(p, 0.105, 0.135), cut2 = seg(p, 0.225, 0.255);
+    warmup(p);
+    // --- Act I: three water beats; cuts carried by scrubbed bridge shots when available
+    const cut1 = seg(p, 0.100, 0.150), cut2 = seg(p, 0.215, 0.285);
+    const b1 = setBridge('cove-bay', (p >= 0.100 && p <= 0.150) ? cut1 : -1);
+    const b2 = setBridge('bay-wake', (p >= 0.215 && p <= 0.285) ? cut2 : -1);
+    const coveO = band(p, -1, 0, 0.100, 0.150) * (1 - b1 * 0.9);
+    const bayO  = band(p, 0.100, 0.150, 0.215, 0.285) * (1 - Math.max(b1, b2) * 0.9);
+    const wakeO = band(p, 0.215, 0.285, 0.345, 0.372) * (1 - b2 * 0.9);
     setLayer('cove', coveO, 1 + cut1 * 0.05, 1 + cut1 * (1 - cut1) * 0.9);
-    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.105, 0.150)) * 0.04 + easeIO(cut2) * 0.14, 1 + cut2 * (1 - cut2) * 0.9);
-    setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.225, 0.270)) * 0.04);
-    // luminance haze peaks mid-dissolve so the blend never reads as double-exposure
-    veilLumen.style.opacity = (0.34 * Math.max(cut1 * (1 - cut1) * 4 * 0.25, cut2 * (1 - cut2) * 4 * 0.25) * 4).toFixed(3);
+    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.100, 0.165)) * 0.04 + easeIO(cut2) * 0.14, 1 + cut2 * (1 - cut2) * 0.9);
+    setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.215, 0.300)) * 0.04);
+    // luminance haze peaks mid-cut (softer when a bridge is carrying it)
+    const hazePeak = Math.max(cut1 * (1 - cut1), cut2 * (1 - cut2)) * 4;
+    veilLumen.style.opacity = ((Math.max(b1, b2) > 0 ? 0.16 : 0.34) * hazePeak).toFixed(3);
 
     // TEXT PERSISTS ACROSS FOOTAGE CUTS (reel grammar): headline carries through the cove→bay dissolve
     setCopy('cove', band(p, -1, 0, 0.150, 0.182));
-    setCopy('bay',  band(p, 0.188, 0.216, 0.225, 0.252));
-    setCopy('wake', band(p, 0.262, 0.290, 0.306, 0.334));
-    if (p > 0.262) runCount();
+    setCopy('bay',  band(p, 0.188, 0.216, 0.218, 0.242));
+    setCopy('wake', band(p, 0.292, 0.315, 0.322, 0.348));
+    if (p > 0.292) runCount();
     q('.scroll-cue').style.opacity = (0.7 * band(p, -1, 0, 0.06, 0.10)).toFixed(2);
 
     // --- dip to dark, into the saloon
