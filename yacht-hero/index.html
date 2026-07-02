@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>AZIMUT — Where the coast meets the open sea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0e1418;
+    --paper: #f7f5f1;
+    --paper-warm: #efece6;
+    --sea: #0c2531;
+    --gold: #b9a179;
+    --white: #ffffff;
+    --serif: "Instrument Serif", Georgia, serif;
+    --sans: "Inter", -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+  body { background: var(--ink); color: var(--white); font-family: var(--sans); overflow-x: hidden; }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 48px;
+    transition: background .5s ease, color .5s ease;
+  }
+  .nav.on-light { color: var(--ink); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .35em; font-weight: 500; }
+  .nav-logo .mark {
+    width: 26px; height: 26px; border: 1px solid currentColor;
+    display: grid; place-items: center; font-family: var(--serif); font-size: 15px;
+  }
+  .nav-center { font-size: 11px; letter-spacing: .3em; font-weight: 400; opacity: .85; }
+  .nav-cta {
+    font-size: 10px; letter-spacing: .28em; font-weight: 500;
+    border: 1px solid currentColor; padding: 12px 22px;
+    background: transparent; color: inherit; cursor: pointer;
+    transition: background .3s, color .3s;
+  }
+  .nav.on-light .nav-cta:hover { background: var(--ink); color: var(--paper); }
+  .nav:not(.on-light) .nav-cta:hover { background: var(--white); color: var(--ink); }
+
+  /* ---------- Shared act plumbing ---------- */
+  .act { position: relative; }
+  .act .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  .layer { position: absolute; inset: 0; opacity: 0; will-change: opacity; }
+  .layer video, .layer img.fallback {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  .layer .tint { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,16,20,.35) 0%, rgba(10,16,20,.05) 40%, rgba(10,16,20,.35) 100%); }
+  .layer[data-beat="saloon"] .tint { background: linear-gradient(100deg, rgba(10,16,20,.66) 0%, rgba(10,16,20,.28) 48%, rgba(10,16,20,.06) 100%); }
+  .craft-copy h2 { text-shadow: 0 2px 30px rgba(10,16,20,.45); }
+
+  .copy { position: absolute; z-index: 5; opacity: 0; will-change: opacity, transform; }
+
+  h1, h2, .display { font-family: var(--serif); font-weight: 400; letter-spacing: .01em; }
+
+  /* ---------- Act 1: coast / bay / wake ---------- */
+  #act1 { height: 480vh; }
+  .hero-copy { left: 48px; bottom: 18vh; max-width: 560px; }
+  .hero-copy h1 { font-size: clamp(42px, 5.2vw, 76px); line-height: 1.05; }
+  .scroll-cue {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; letter-spacing: .5em; opacity: .7; z-index: 6;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .scroll-cue::after { content: ""; width: 1px; height: 34px; background: linear-gradient(180deg, currentColor, transparent); }
+
+  .ghost-name {
+    left: 0; right: 0; top: 38vh; text-align: center;
+  }
+  .ghost-name .display { font-size: clamp(64px, 9vw, 140px); line-height: 1; }
+  .ghost-name .eyebrow { font-size: 10px; letter-spacing: .5em; margin-bottom: 18px; opacity: .8; }
+
+  .specs {
+    left: 48px; bottom: 16vh; display: flex; gap: 64px;
+  }
+  .spec .num { font-family: var(--serif); font-size: clamp(34px, 3.6vw, 56px); }
+  .spec .num sub { font-size: .4em; vertical-align: baseline; margin-left: 2px; }
+  .spec .lbl { font-size: 9px; letter-spacing: .4em; opacity: .7; margin-top: 10px; }
+
+  /* ---------- Act 2: craft ---------- */
+  #act2 { height: 260vh; }
+  .craft-copy { left: 48px; top: 30vh; max-width: 520px; }
+  .craft-copy h2 { font-size: clamp(36px, 4.4vw, 64px); line-height: 1.12; }
+
+  /* ---------- Act 3: fleet (light) ---------- */
+  #act3 { height: 560vh; background: var(--paper); color: var(--ink); }
+  #act3 .stage { background: var(--paper); }
+  .fleet-intro {
+    left: 0; right: 0; top: 0; height: 100vh;
+    display: grid; place-items: center; text-align: left; padding: 0 48px;
+  }
+  .fleet-intro h2 { font-size: clamp(36px, 4.6vw, 68px); line-height: 1.1; color: var(--ink); max-width: 700px; }
+  .fleet-intro .rule { width: 120px; height: 3px; background: var(--sea); margin-top: 36px; opacity: .85; }
+
+  .deck { position: absolute; inset: 0; display: grid; place-items: center; }
+  .card {
+    position: absolute; inset: 0; margin: auto; height: fit-content;
+    width: min(940px, 86vw); background: var(--white);
+    box-shadow: 0 30px 80px rgba(14,20,24,.14);
+    padding: 56px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center;
+    opacity: 0; will-change: transform, opacity;
+  }
+  .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .card .eyebrow { font-size: 9px; letter-spacing: .45em; color: var(--gold); margin-bottom: 16px; text-transform: uppercase; }
+  .card h3 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: clamp(30px, 3vw, 44px); color: var(--ink); margin-bottom: 14px; }
+  .card p { font-size: 12.5px; line-height: 1.75; color: #5a6067; max-width: 40ch; }
+  .card .mini-specs { display: flex; gap: 36px; margin-top: 26px; }
+  .card .mini-specs .num { font-family: var(--serif); font-size: 20px; color: var(--ink); }
+  .card .mini-specs .lbl { font-size: 8.5px; letter-spacing: .35em; color: #9aa0a6; margin-top: 6px; }
+  .card .enquire {
+    margin-top: 30px; display: inline-block; font-size: 10px; letter-spacing: .3em;
+    color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--gold); padding-bottom: 5px;
+  }
+  .deck-progress {
+    position: absolute; bottom: 6vh; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 6;
+  }
+  .deck-progress i { width: 26px; height: 2px; background: rgba(14,20,24,.15); transition: background .3s; }
+  .deck-progress i.on { background: var(--ink); }
+
+  /* ---------- Act 4: payoff ---------- */
+  #act4 { height: 300vh; }
+  .payoff-copy { left: 0; right: 0; top: 0; height: 100vh; display: grid; place-items: center; text-align: center; }
+  .payoff-copy h2 { font-size: clamp(38px, 5vw, 72px); line-height: 1.15; max-width: 640px; }
+
+  /* ---------- Footer strip ---------- */
+  footer {
+    background: var(--sea); color: var(--paper);
+    padding: 90px 48px 60px; display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  footer .display { font-size: clamp(28px, 3vw, 44px); }
+  footer .fine { font-size: 10px; letter-spacing: .25em; opacity: .6; }
+
+  .updated-tag { position: fixed; bottom: 8px; right: 12px; font-size: 8px; letter-spacing: .1em; opacity: .25; z-index: 200; pointer-events: none; }
+
+  @media (max-width: 760px) {
+    .nav { padding: 18px 22px; }
+    .nav-center { display: none; }
+    .hero-copy, .craft-copy, .specs { left: 22px; }
+    .card { grid-template-columns: 1fr; padding: 32px; gap: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .layer, .copy, .card { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-logo"><span class="mark">A</span> AZIMUT</div>
+  <div class="nav-center">FLEET</div>
+  <button class="nav-cta">EXPLORE THE FLEET</button>
+</nav>
+
+<!-- ACT 1 — coast → bay → 26M wake -->
+<section class="act" id="act1">
+  <div class="stage">
+    <div class="layer" data-beat="cove">
+      <video muted loop playsinline preload="auto" poster="assets/poster-cove.jpg" src="assets/beat-cove.mp4"></video>
+      <div class="tint"></div>
+    </div>
+    <div class="layer" data-beat="bay">
+      <video muted loop playsinline preload="metadata" poster="assets/poster-bay.jpg" src="assets/beat-bay.mp4"></video>
+      <div class="tint"></div>
+    </div>
+    <div class="layer" data-beat="wake">
+      <video muted loop playsinline preload="metadata" poster="assets/poster-wake.jpg" src="assets/beat-wake.mp4"></video>
+      <div class="tint"></div>
+    </div>
+
+    <div class="copy hero-copy" data-copy="cove">
+      <h1>Where the coast<br>meets the open sea.</h1>
+    </div>
+    <div class="copy ghost-name" data-copy="bay">
+      <div class="eyebrow">FLYBRIDGE COLLECTION</div>
+      <div class="display">Grande 26M</div>
+    </div>
+    <div class="copy specs" data-copy="wake">
+      <div class="spec"><div class="num" data-count="26.1" data-dec="1">0<sub>m</sub></div><div class="lbl">LENGTH OVERALL</div></div>
+      <div class="spec"><div class="num" data-count="5">0</div><div class="lbl">CABINS</div></div>
+      <div class="spec"><div class="num" data-count="28" data-suffix="kn">0</div><div class="lbl">MAX SPEED</div></div>
+    </div>
+
+    <div class="scroll-cue">SCROLL</div>
+  </div>
+</section>
+
+<!-- ACT 2 — craft -->
+<section class="act" id="act2">
+  <div class="stage">
+    <div class="layer" data-beat="saloon">
+      <video muted loop playsinline preload="metadata" poster="assets/poster-saloon.jpg" src="assets/beat-saloon.mp4"></video>
+      <div class="tint"></div>
+    </div>
+    <div class="copy craft-copy" data-copy="saloon">
+      <h2>Mahogany, leather,<br>and a hundred<br>metres of horizon.</h2>
+    </div>
+  </div>
+</section>
+
+<!-- ACT 3 — fleet (light) -->
+<section class="act" id="act3">
+  <div class="stage">
+    <div class="copy fleet-intro" data-copy="fleetintro">
+      <div>
+        <h2>Four vessels.<br>One commitment to craft.</h2>
+        <div class="rule"></div>
+      </div>
+    </div>
+    <div class="deck" id="deck">
+      <article class="card" data-card="0">
+        <img src="assets/card-verve24.jpg" alt="Verve 24">
+        <div>
+          <div class="eyebrow">DAY BOAT · 01</div>
+          <h3>Verve 24</h3>
+          <p>An entry into the atelier — a nimble open sport-tender for day trips along the coast. Twenty-four knots of effortless reach, and a swim deck built for an afternoon at anchor.</p>
+          <div class="mini-specs">
+            <div><div class="num">7.4 m</div><div class="lbl">LENGTH</div></div>
+            <div><div class="num">8</div><div class="lbl">GUESTS</div></div>
+            <div><div class="num">2024</div><div class="lbl">YEAR</div></div>
+          </div>
+          <a class="enquire" href="#">ENQUIRE →</a>
+        </div>
+      </article>
+      <article class="card" data-card="1">
+        <img src="assets/card-atlantis45.jpg" alt="Atlantis 45">
+        <div>
+          <div class="eyebrow">SPORT CRUISER · 02</div>
+          <h3>Atlantis 45</h3>
+          <p>A coupé of the sea — hard lines, a glass superstructure, and two cabins finished in oak and linen. Built to cross to the islands before lunch.</p>
+          <div class="mini-specs">
+            <div><div class="num">13.9 m</div><div class="lbl">LENGTH</div></div>
+            <div><div class="num">10</div><div class="lbl">GUESTS</div></div>
+            <div><div class="num">2025</div><div class="lbl">YEAR</div></div>
+          </div>
+          <a class="enquire" href="#">ENQUIRE →</a>
+        </div>
+      </article>
+      <article class="card" data-card="2">
+        <img src="assets/card-magellano60.jpg" alt="Magellano 60">
+        <div>
+          <div class="eyebrow">LONG RANGE · 03</div>
+          <h3>Magellano 60</h3>
+          <p>The navigator of the family — a dual-mode hull that carries a thousand miles in comfort, with a master suite that watches the horizon.</p>
+          <div class="mini-specs">
+            <div><div class="num">18.3 m</div><div class="lbl">LENGTH</div></div>
+            <div><div class="num">8</div><div class="lbl">GUESTS</div></div>
+            <div><div class="num">2025</div><div class="lbl">YEAR</div></div>
+          </div>
+          <a class="enquire" href="#">ENQUIRE →</a>
+        </div>
+      </article>
+      <article class="card" data-card="3">
+        <img src="assets/card-grande140.jpg" alt="Grande 140">
+        <div>
+          <div class="eyebrow">FLAGSHIP SUPERYACHT · 04</div>
+          <h3>Grande 140</h3>
+          <p>Our flagship commission — a 42-metre trideck with a certified foredeck helipad, sundeck infinity pool, and full beach club. Eighteen months from contract to sea trial in Viareggio.</p>
+          <div class="mini-specs">
+            <div><div class="num">42.5 m</div><div class="lbl">LENGTH</div></div>
+            <div><div class="num">12</div><div class="lbl">GUESTS</div></div>
+            <div><div class="num">2027</div><div class="lbl">YEAR</div></div>
+          </div>
+          <a class="enquire" href="#">ENQUIRE →</a>
+        </div>
+      </article>
+      <div class="deck-progress" id="deckProgress"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ACT 4 — payoff -->
+<section class="act" id="act4">
+  <div class="stage">
+    <div class="layer" data-beat="splash">
+      <video muted loop playsinline preload="metadata" poster="assets/poster-splash.jpg" src="assets/beat-splash.mp4"></video>
+      <div class="tint"></div>
+    </div>
+    <div class="copy payoff-copy" data-copy="payoff">
+      <h2>The shortest<br>commute in the world.</h2>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="display">Azimut. Since 1969.</div>
+  <div class="fine">CRAFT EXERCISE — NOT FOR PUBLICATION</div>
+</footer>
+
+<div class="updated-tag">Last updated: 2026-07-02 · yacht-hero v0.1</div>
+
+<script>
+(() => {
+  const vh = () => window.innerHeight;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  // band(p, in0, in1, out0, out1) → 0..1..0 envelope across progress p
+  const band = (p, i0, i1, o0, o1) =>
+    clamp((p - i0) / Math.max(1e-4, i1 - i0), 0, 1) * (1 - clamp((p - o0) / Math.max(1e-4, o1 - o0), 0, 1));
+
+  const acts = {};
+  for (const id of ['act1', 'act2', 'act3', 'act4']) {
+    const el = document.getElementById(id);
+    acts[id] = { el, target: 0, current: 0 };
+  }
+  const q = (sel, root = document) => root.querySelector(sel);
+  const qa = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  const L = {};   // layers by beat name
+  qa('.layer').forEach(el => L[el.dataset.beat] = el);
+  const C = {};   // copy blocks
+  qa('.copy').forEach(el => C[el.dataset.copy] = el);
+  const cards = qa('.card');
+  const deckDots = qa('#deckProgress i');
+  const nav = q('#nav');
+
+  // --- video play/pause management: only the visible layer's video plays
+  const setLayer = (name, opacity) => {
+    const el = L[name]; if (!el) return;
+    el.style.opacity = opacity.toFixed(3);
+    const v = q('video', el);
+    if (v && !v.error && v.readyState >= 2) {
+      if (opacity > 0.02 && v.paused) v.play().catch(() => {});
+      else if (opacity <= 0.02 && !v.paused) v.pause();
+    }
+  };
+  const setCopy = (name, opacity, rise = 24) => {
+    const el = C[name]; if (!el) return;
+    el.style.opacity = opacity.toFixed(3);
+    el.style.transform = `translateY(${((1 - opacity) * rise).toFixed(1)}px)`;
+  };
+
+  // --- spec count-up (armed once when wake band first opens)
+  let counted = false;
+  const runCount = () => {
+    if (counted) return; counted = true;
+    qa('[data-count]').forEach(el => {
+      const end = parseFloat(el.dataset.count);
+      const dec = parseInt(el.dataset.dec || '0', 10);
+      const suffix = el.dataset.suffix || '';
+      const sub = q('sub', el)?.outerHTML || '';
+      if (FREEZE) { el.innerHTML = end.toFixed(dec) + suffix + sub; return; }
+      const t0 = performance.now(), dur = 1400;
+      const tick = (t) => {
+        const k = clamp((t - t0) / dur, 0, 1);
+        const e = 1 - Math.pow(1 - k, 3);
+        el.innerHTML = (end * e).toFixed(dec) + suffix + sub;
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  };
+
+  const onScroll = () => {
+    const y = window.scrollY;
+    for (const k in acts) {
+      const { el } = acts[k];
+      const span = el.offsetHeight - vh();
+      acts[k].target = span > 0 ? clamp((y - el.offsetTop) / span, 0, 1) : 0;
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  const FREEZE = new URLSearchParams(location.search).has('freeze');
+  let armed = !new URLSearchParams(location.search).has('p');
+  const frame = () => {
+    let needsNavLight = false;
+    let settled = true;
+    for (const k in acts) {
+      const a = acts[k];
+      a.current += (a.target - a.current) * (FREEZE ? 0.5 : 0.09);
+      if (Math.abs(a.target - a.current) < 0.0005) a.current = a.target; else settled = false;
+    }
+
+    // ACT 1 — three beats across progress
+    {
+      const p = acts.act1.current;
+      setLayer('cove', band(p, -1, 0, 0.26, 0.36));
+      setLayer('bay',  band(p, 0.26, 0.36, 0.60, 0.70));
+      setLayer('wake', band(p, 0.60, 0.70, 2, 3));
+      setCopy('cove', band(p, -1, 0, 0.18, 0.30));
+      setCopy('bay',  band(p, 0.30, 0.40, 0.56, 0.66));
+      setCopy('wake', band(p, 0.71, 0.80, 2, 3));
+      if (p > 0.71) runCount();
+      q('.scroll-cue').style.opacity = (0.7 * band(p, -1, 0, 0.10, 0.20)).toFixed(2);
+    }
+
+    // ACT 2 — saloon
+    {
+      const p = acts.act2.current;
+      setLayer('saloon', band(p, -0.05, 0.10, 2, 3));
+      setCopy('saloon', band(p, 0.12, 0.28, 0.9, 1.05));
+    }
+
+    // ACT 3 — light editorial: intro then 4 cards
+    {
+      const p = acts.act3.current;
+      setCopy('fleetintro', band(p, 0.02, 0.10, 0.20, 0.28));
+      const seg = 0.76 / 4; // cards occupy 0.22..0.98, overlapping crossfades
+      cards.forEach((card, i) => {
+        const c0 = 0.22 + i * seg;
+        const o = band(p, c0, c0 + seg * 0.30, c0 + seg * 0.88, c0 + seg * 1.18);
+        card.style.opacity = o.toFixed(3);
+        const drift = (p - (c0 + seg / 2)) / seg;  // -0.5..0.5 through its life
+        card.style.transform = `translateY(${(-drift * 26).toFixed(1)}px) scale(${(0.97 + o * 0.03).toFixed(3)})`;
+        card.style.zIndex = 10 + i;
+        deckDots[i].classList.toggle('on', p >= c0 && p < c0 + seg + (i === 3 ? 1 : 0));
+      });
+      // nav flips dark text while act3 stage is on screen
+      const r = acts.act3.el.getBoundingClientRect();
+      needsNavLight = r.top < 60 && r.bottom > 60;
+    }
+
+    // ACT 4 — payoff
+    {
+      const p = acts.act4.current;
+      setLayer('splash', band(p, -0.05, 0.10, 2, 3));
+      setCopy('payoff', band(p, 0.30, 0.50, 2, 3), 30);
+    }
+
+    nav.classList.toggle('on-light', needsNavLight);
+    if (FREEZE && settled && armed) {
+      qa('video').forEach(v => {
+        v.pause();
+        // force a decoded frame so paused videos paint in headless QA captures
+        if (!v.error && v.readyState >= 1 && v.currentTime === 0) v.currentTime = 1.5;
+      });
+      document.title += ' · FROZEN';
+      return;
+    }
+    requestAnimationFrame(frame);
+  };
+
+  // deterministic playhead for QA: ?p=0.5 scrolls the doc to 50%
+  const usp = new URLSearchParams(location.search);
+  if (usp.has('p')) {
+    const p = parseFloat(usp.get('p'));
+    addEventListener('load', () => {
+      scrollTo(0, (document.documentElement.scrollHeight - vh()) * clamp(p, 0, 1));
+      onScroll();
+      armed = true;
+      if (FREEZE) requestAnimationFrame(frame);
+    });
+  }
+
+  // Safari/iOS: autoplay can reject until a user gesture — kick visible videos on first interaction
+  const kick = () => qa('video').forEach(v => { if (!v.error && v.paused && v.closest('.layer').style.opacity > 0.02) v.play().catch(() => {}); });
+  addEventListener('touchstart', kick, { once: true, passive: true });
+  addEventListener('wheel', kick, { once: true, passive: true });
+
+  onScroll();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
