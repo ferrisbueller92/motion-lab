@@ -357,7 +357,7 @@
 <script src="assets/lenis.min.js"></script>
 <script>
 (function(){
-  var FRAME_COUNT=431, FORMAT="webp";               // 5 Seedance clips @12fps via make_frames.py
+  var FRAME_COUNT=448, FORMAT="webp";               // 5 clips @12fps + flow-morph junctions via make_frames.py
   var DIR="frames/desktop";
   var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   function pad(n){n=''+n;while(n.length<4)n='0'+n;return n;}
@@ -378,9 +378,9 @@
   /* phase captions — fractions tuned to the clip boundaries */
   var PHASES=[
     [0.00,'01 — THE GRASS','Every great pool starts as a patch of grass.'],
-    [0.06,'02 — THE DIG','We dig, frame, and steel-reinforce — engineered to Texas soil.'],
-    [0.43,'03 — THE BUILD','Gunite shell. Hand-set tile. Stone coping. Precision.'],
-    [0.80,'04 — THE WEEKEND','Fill it, balance it — then dive in.']
+    [0.056,'02 — THE DIG','We dig, frame, and steel-reinforce — engineered to Texas soil.'],
+    [0.426,'03 — THE BUILD','Gunite shell. Hand-set tile. Stone coping. Precision.'],
+    [0.815,'04 — THE WEEKEND','Fill it, balance it — then dive in.']
   ];
   var caption=document.getElementById('caption');
   var capEyebrow=document.getElementById('capEyebrow');
