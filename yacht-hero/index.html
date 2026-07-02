@@ -133,7 +133,9 @@
     opacity: 0; pointer-events: none;
   }
   #endcard .display { font-size: clamp(30px, 3.6vw, 52px); }
+  #endcard .rule { width: 72px; height: 1px; background: var(--gold); opacity: .8; }
   #endcard .fine { font-size: 10px; letter-spacing: .3em; opacity: .6; }
+  #endcard .inner { display: flex; flex-direction: column; align-items: center; gap: 18px; will-change: transform; }
 
   .updated-tag { position: fixed; bottom: 8px; right: 12px; font-size: 8px; letter-spacing: .1em; opacity: .25; z-index: 200; pointer-events: none; }
 
@@ -284,8 +286,11 @@
   </div>
 
   <div id="endcard">
-    <div class="display">Azimut. Since 1969.</div>
-    <div class="fine">CRAFT EXERCISE — NOT FOR PUBLICATION</div>
+    <div class="inner">
+      <div class="display">Azimut. Since 1969.</div>
+      <div class="rule"></div>
+      <div class="fine">CRAFT EXERCISE — NOT FOR PUBLICATION</div>
+    </div>
   </div>
 </div>
 
@@ -416,11 +421,11 @@
   const conduct = (p) => {
     warmup(p);
     // --- Act I: three water beats; cuts carried by scrubbed bridge shots when available
-    const cut1 = seg(p, 0.100, 0.150), cut2 = seg(p, 0.215, 0.285);
-    const b1 = setBridge('cove-bay', (p >= 0.100 && p <= 0.150) ? cut1 : -1);
+    const cut1 = seg(p, 0.108, 0.142), cut2 = seg(p, 0.215, 0.285);
+    const b1 = setBridge('cove-bay', (p >= 0.108 && p <= 0.142) ? cut1 : -1);
     const b2 = setBridge('bay-wake', (p >= 0.215 && p <= 0.285) ? cut2 : -1);
-    const coveO = band(p, -1, 0, 0.100, 0.150) * (1 - b1 * 0.9);
-    const bayO  = band(p, 0.100, 0.150, 0.215, 0.285) * (1 - Math.max(b1, b2) * 0.9);
+    const coveO = band(p, -1, 0, 0.108, 0.142) * (1 - b1 * 0.9);
+    const bayO  = band(p, 0.108, 0.142, 0.215, 0.285) * (1 - Math.max(b1, b2) * 0.9);
     const wakeO = band(p, 0.215, 0.285, 0.345, 0.372) * (1 - b2 * 0.9);
     setLayer('cove', coveO, 1 + cut1 * 0.05, 1 + cut1 * (1 - cut1) * 0.9);
     setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.100, 0.165)) * 0.04 + easeIO(cut2) * 0.14, 1 + cut2 * (1 - cut2) * 0.9);
@@ -449,7 +454,7 @@
 
     fleetIntro.style.opacity = band(p, 0.520, 0.555, 0.585, 0.615).toFixed(3);
 
-    const cardSpan = 0.210 / 4;   // 0.600-0.810
+    const cardSpan = 0.180 / 4;   // 0.600-0.780 — brisker, reel-paced
     cards.forEach((card, i) => {
       const c0 = 0.600 + i * cardSpan;
       const o = band(p, c0, c0 + cardSpan * 0.22, c0 + cardSpan * 0.86, c0 + cardSpan * 1.00);
@@ -467,8 +472,10 @@
     setLayer('splash', band(p, 0.826, 0.850, 2, 3), 1.02 - easeIO(seg(p, 0.826, 0.90)) * 0.02);
     setCopy('payoff', band(p, 0.856, 0.888, 2, 3), 30);
 
-    // --- end card
-    endcard.style.opacity = band(p, 0.955, 0.985, 2, 3).toFixed(3);
+    // --- end card: fades over the underwater with a slow settle
+    const endK = band(p, 0.955, 0.985, 2, 3);
+    endcard.style.opacity = endK.toFixed(3);
+    q('.inner', endcard).style.transform = `translateY(${((1 - endK) * 28).toFixed(1)}px)`;
 
     // nav flips while the white curtain owns the screen
     nav.classList.toggle('on-light', rise > 0.55 && p < 0.836);
