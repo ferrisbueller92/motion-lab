@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Northlight — paint-roller hero (reverse-engineering exercise)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fraunces = high-contrast display serif (Canela/Ogg stand-in); Inter for UI -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="brand" href="#"><span class="dot"></span>Northlight</a>
+  <div class="nav-links">
+    <a href="#">Services</a><a href="#">Process</a><a href="#">Work</a>
+    <a class="pill" href="#">Get a quote</a>
+  </div>
+</nav>
+
+<!-- HERO (pinned, scroll-scrubbed) -->
+<section class="hero" id="hero">
+  <div class="wall" aria-hidden="true"></div>
+
+  <!-- PAINT COLUMN — real keyed emulsion texture (Higgsfield render, bg-removed);
+       revealed top→roller by a clip-path band driven by scroll -->
+  <div class="paint" id="paint" aria-hidden="true"></div>
+
+  <!-- ROLLER — photoreal (Higgsfield render, bg-removed).
+       sleeve-nap = the rolling cue: a nap texture on the sleeve that scrolls with travel -->
+  <div class="roller" id="roller">
+    <!-- projected cast shadow: same silhouette, dark + blurred + skewed left (sun on the
+         right). Near-zero offset at the sleeve, long to the left at the protruding handle -->
+    <img class="roller-cast" src="assets/roller.png" alt="" aria-hidden="true" draggable="false">
+    <img class="roller-img" src="assets/roller.png" alt="" draggable="false">
+    <span class="sleeve-nap" id="nap" aria-hidden="true"></span>
+  </div>
+
+  <!-- directional (vertical) motion-blur filter — stdDeviation driven by scroll velocity -->
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="rollblur" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur id="rollblurG" in="SourceGraphic" stdDeviation="0 0"/>
+    </filter>
+  </svg>
+
+  <!-- HEADLINE BEATS -->
+  <div class="beats" id="beats">
+    <div class="beat is-on" data-beat="0">
+      <span class="eyebrow">Northlight Painting Co.</span>
+      <h1>The wall is<br><em>a blank canvas.</em></h1>
+    </div>
+    <div class="beat" data-beat="1">
+      <h1>One <em>true</em><br>color.</h1>
+    </div>
+    <div class="beat" data-beat="2">
+      <h1>Lines so clean<br><em>they disappear.</em></h1>
+      <p class="sub">Edges cut by hand. No tape ghosting,<br>no roller stipple, no missed spots.</p>
+    </div>
+  </div>
+
+  <div class="scroll-cue" id="cue" aria-hidden="true">Scroll</div>
+</section>
+
+<!-- release section (so the pinned hero has scroll distance + something to reveal into) -->
+<section class="after">
+  <div class="after-inner">
+    <span class="eyebrow dark">Done right, the first time.</span>
+    <h2>Every surface, finished properly.</h2>
+    <p>Interior &amp; exterior painting across the city — prep that lasts, lines that don't.</p>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

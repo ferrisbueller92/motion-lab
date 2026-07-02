@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veloura Heights</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M9 1 17 17H1Z' fill='none' stroke='%23f2ede4' stroke-width='1.6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0001.webp" type="image/webp">
+<link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0002.webp" type="image/webp">
+<link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0003.webp" type="image/webp">
+<link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0004.webp" type="image/webp">
+<style>
+  :root{
+    --ink:#0e0d0b;
+    --paper:#f7f5f0;
+    --hair:rgba(255,255,255,.22);
+    --glass:rgba(14,13,11,.32);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:auto}
+  body{background:var(--ink);color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:#c8b89a;color:var(--ink)}
+
+  /* ===== scrub stage ===== */
+  #hero{position:relative;height:420vh;background:var(--ink)}
+  #stick{position:sticky;top:0;height:100vh;overflow:hidden}
+  #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .3s ease}
+  #hero-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #hero.ready #hero-canvas{opacity:1}
+  #hero.ready #hero-poster{opacity:0;transition:opacity .3s ease}
+  #stick::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,0) 26%,rgba(0,0,0,0) 55%,rgba(0,0,0,.38) 100%)}
+
+  /* ===== fixed hero UI overlay ===== */
+  #ui{position:absolute;inset:0;z-index:3;pointer-events:none}
+  #ui .clickable{pointer-events:auto}
+
+  header{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    padding:1.5rem 2.2rem;transition:opacity .4s ease}
+  .logo{display:flex;align-items:center;gap:.6rem;font-size:.72rem;letter-spacing:.22em;font-weight:600}
+  .logo svg{display:block}
+  nav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:.25rem;
+    background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--hair);border-radius:999px;padding:.35rem .5rem}
+  nav a{color:rgba(255,255,255,.85);text-decoration:none;font-size:.8rem;font-weight:500;
+    padding:.45rem .95rem;border-radius:999px;transition:background .25s,color .25s}
+  nav a.on,nav a:hover{background:rgba(255,255,255,.14);color:#fff}
+  .top-cta{font-size:.8rem;font-weight:600;color:#fff;text-decoration:none;
+    border:1px solid var(--hair);border-radius:999px;padding:.55rem 1.1rem;
+    background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:background .25s}
+  .top-cta:hover{background:rgba(255,255,255,.16)}
+
+  .headline{position:absolute;left:2.4rem;top:33%;max-width:44rem;transition:opacity .3s ease}
+  .eyebrow{font-size:.68rem;letter-spacing:.34em;font-weight:600;color:rgba(255,255,255,.72);margin-bottom:1.1rem}
+  h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(3.4rem,7.2vw,6.4rem);
+    line-height:.98;letter-spacing:-.01em}
+  h1 em{font-style:italic;letter-spacing:0}
+  .sub{margin-top:1.3rem;max-width:24rem;font-size:.95rem;line-height:1.55;color:rgba(255,255,255,.82)}
+  .cta{display:inline-flex;align-items:center;gap:.55rem;margin-top:1.9rem;
+    background:#f2ede4;color:var(--ink);font-size:.86rem;font-weight:600;text-decoration:none;
+    border-radius:999px;padding:.85rem 1.5rem;transition:transform .25s ease,box-shadow .25s ease}
+  .cta:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.35)}
+  .cta span{transition:transform .25s ease}
+  .cta:hover span{transform:translateX(3px)}
+
+  .scroll-cue{position:absolute;left:2.4rem;bottom:2rem;font-size:.78rem;letter-spacing:.14em;
+    color:rgba(255,255,255,.75);transition:opacity .5s ease}
+  .vision{position:absolute;right:2.4rem;bottom:2rem;width:17rem;padding:1.1rem 1.2rem;
+    background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--hair);border-radius:14px;transition:opacity .3s ease}
+  .vision p{font-size:.78rem;line-height:1.55;color:rgba(255,255,255,.85)}
+  .vision a{display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;
+    font-size:.66rem;letter-spacing:.22em;font-weight:600;color:#fff;text-decoration:none}
+  .vision a b{display:grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:999px;
+    background:rgba(255,255,255,.18);font-weight:400}
+
+  /* build progress readout — ties UI to the scrub */
+  .phase{position:absolute;right:2.4rem;top:50%;transform:translateY(-50%);text-align:right;transition:opacity .3s ease}
+  .phase .pct{font-family:'Instrument Serif',serif;font-size:2.6rem;line-height:1}
+  .phase .lbl{margin-top:.3rem;font-size:.62rem;letter-spacing:.3em;font-weight:600;color:rgba(255,255,255,.7)}
+
+  /* ===== about section ===== */
+  .about{position:relative;z-index:4;background:var(--paper);color:#17150f;
+    min-height:100vh;display:grid;place-items:center;text-align:center;padding:7rem 1.5rem;
+    margin-top:-7vh;border-radius:32px 32px 0 0;box-shadow:0 -30px 60px rgba(0,0,0,.35)}
+  .about-inner{max-width:46rem}
+  .about .kicker{font-size:.64rem;letter-spacing:.3em;font-weight:600;color:#8a8474;margin-bottom:2.2rem}
+  .about h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(1.9rem,3.4vw,2.9rem);margin-bottom:2rem}
+  .about p.lede{font-family:'Instrument Serif',serif;font-size:clamp(1.25rem,2.1vw,1.7rem);line-height:1.5;color:#2a271f}
+  .about p.foot{margin-top:2.4rem;font-size:.8rem;line-height:1.6;color:#8a8474;max-width:34rem;margin-left:auto;margin-right:auto}
+  .reveal{opacity:0;transform:translateY(26px);filter:blur(10px);
+    transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1),filter .9s cubic-bezier(.22,.61,.36,1)}
+  .reveal.in{opacity:1;transform:none;filter:blur(0)}
+  /* per-line masked rise for the lede (reel-style) */
+  .line-mask{display:block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
+  .line{display:block;transform:translateY(115%);opacity:.15;filter:blur(7px);
+    transition:transform 1s cubic-bezier(.22,.61,.36,1),opacity 1s cubic-bezier(.22,.61,.36,1),filter 1s cubic-bezier(.22,.61,.36,1)}
+  .line.in{transform:none;opacity:1;filter:blur(0)}
+
+  footer{background:var(--paper);color:#8a8474;text-align:center;padding:2.5rem 1rem 3rem;font-size:.72rem;letter-spacing:.08em}
+
+  @media (max-width:820px){
+    nav{display:none}
+    .headline{left:1.4rem;right:1.4rem;top:30%}
+    .vision{display:none}
+    .phase{display:none}
+    .scroll-cue{left:1.4rem}
+  }
+  /* entrance choreography — staggered settle on first load */
+  .enter{opacity:0;transform:translateY(18px);filter:blur(6px)}
+  body.loaded .enter{animation:enterIn 1s cubic-bezier(.22,.61,.36,1) forwards;animation-delay:var(--d,0s)}
+  body.no-enter .enter{opacity:1;transform:none;filter:none;animation:none}
+  @keyframes enterIn{to{opacity:1;transform:none;filter:blur(0)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;filter:none;transition:none}
+    .enter{opacity:1;transform:none;filter:none;animation:none !important}
+    .line{transform:none;opacity:1;filter:none;transition:none}
+  }
+</style></head>
+<body>
+<section id="hero" aria-label="Veloura Heights — watch it rise as you scroll">
+  <div id="stick">
+    <picture>
+      <img id="hero-poster" src="frames/desktop/frame_0001.webp" alt="" fetchpriority="high" decoding="async" width="1920" height="1080">
+    </picture>
+    <canvas id="hero-canvas"></canvas>
+
+    <div id="ui">
+      <header id="hdr">
+        <div class="logo enter" style="--d:.1s">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1 17 17H1L9 1Z" stroke="#fff" stroke-width="1.4"/></svg>
+          VELOURA
+        </div>
+        <nav class="clickable enter" style="--d:.2s">
+          <a class="on" href="#">Home</a><a href="#">About</a><a href="#">Residences</a><a href="#">Amenities</a><a href="#">Projects</a><a href="#">Contact</a>
+        </nav>
+        <a class="top-cta clickable enter" style="--d:.3s" href="#">Register Interest</a>
+      </header>
+
+      <div class="headline" id="headline">
+        <div class="eyebrow enter" style="--d:.45s">VELOURA GROUP PRESENTS</div>
+        <h1 class="enter" style="--d:.55s">Veloura <em>Heights</em></h1>
+        <p class="sub enter" style="--d:.75s">Coming soon — a new address shaped for elevated living. Scroll, and watch it rise from the ground.</p>
+        <a class="cta clickable enter" style="--d:.9s" href="#">Register Your Interest <span>&rarr;</span></a>
+      </div>
+
+      <div class="phase" id="phase">
+        <div class="pct" id="pct">0%</div>
+        <div class="lbl" id="phaselbl">SITE PREPARED</div>
+      </div>
+
+      <div class="scroll-cue enter" style="--d:1.15s" id="cue">( Scroll )</div>
+
+      <div class="vision enter" style="--d:1.05s" id="vision">
+        <p>A refined residential landmark with sculpted architecture, luminous interiors, panoramic views and a quiet sense of luxury.</p>
+        <a href="#" class="clickable">EXPLORE THE VISION <b>&rarr;</b></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about">
+  <div class="about-inner">
+    <div class="kicker reveal">&#10035;&nbsp;&nbsp;ABOUT VELOURA HEIGHTS</div>
+    <h2 class="reveal">A new expression of fine living</h2>
+    <p class="lede split">Veloura Heights is envisioned as a calm, contemporary residential address where architecture, light, and landscape come together with purpose. Designed for those who value privacy, comfort, and considered detail.</p>
+    <p class="foot reveal">From concept to completion, every element is shaped with care — from the arrival experience to the way each residence frames light, space, and everyday living.</p>
+  </div>
+</section>
+
+<footer>VELOURA HEIGHTS — internal craft test. Not a real development. Last updated: 2026-07-02 09:10 AEST</footer>
+
+<script>
+(function(){
+  var FRAME_COUNT=178, FORMAT="webp";
+  var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=178;
+  var isMobile=matchMedia('(max-width:767px)').matches;
+  var DIR=(isMobile&&MOBILE_DIR)?MOBILE_DIR:DESKTOP_DIR;
+  var COUNT=(isMobile&&MOBILE_COUNT)?MOBILE_COUNT:FRAME_COUNT;
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function pad(n){n=''+n;while(n.length<4)n='0'+n;return n;}
+  function url(i){return DIR+'/frame_'+pad(i+1)+'.'+FORMAT;}
+
+  var hero=document.getElementById('hero');
+  var canvas=document.getElementById('hero-canvas');
+  var ctx=canvas.getContext('2d',{alpha:false});
+  var bitmaps=new Array(COUNT);
+  var lowest=0;
+  var cur=0, target=0;
+  var fixed=parseFloat((location.hash||'').replace('#',''));   // #0.5 -> lock playhead for capture
+
+  // overlay elements driven by scrub progress
+  var hdr=document.getElementById('hdr');
+  var headline=document.getElementById('headline');
+  var cue=document.getElementById('cue');
+  var vision=document.getElementById('vision');
+  var phase=document.getElementById('phase');
+  var pct=document.getElementById('pct');
+  var phaselbl=document.getElementById('phaselbl');
+  var PHASES=[[0,'SITE PREPARED'],[.16,'FOUNDATIONS POURED'],[.42,'STRUCTURE RISING'],[.68,'FACADE & GLAZING'],[.9,'RESIDENCE COMPLETE']];
+
+  function fade(el,o){el.style.opacity=o;}
+  function choreo(p){
+    // headline + vision hold, then hand the stage to the footage
+    var out=1-Math.max(0,Math.min(1,(p-.5)/.14));
+    fade(headline,out); fade(vision,out); fade(hdr,1-Math.max(0,Math.min(1,(p-.62)/.14)));
+    headline.style.transform='translateY('+(-p*110)+'px)';   // gentle parallax drift during the scrub
+    fade(cue,p<.04?1:0);
+    // phase readout: appears once building starts, leaves at completion
+    var vis=Math.max(0,Math.min(1,(p-.08)/.08)) * (1-Math.max(0,Math.min(1,(p-.86)/.1)));
+    fade(phase,vis);
+    var shown=Math.round(p*100);
+    pct.textContent=shown+'%';
+    var lbl=PHASES[0][1];
+    for(var i=0;i<PHASES.length;i++){ if(p>=PHASES[i][0]) lbl=PHASES[i][1]; }
+    phaselbl.textContent=lbl;
+  }
+
+  function drawBmp(b){
+    var cw=canvas.width, ch=canvas.height, bw=b.width, bh=b.height;
+    var s=Math.max(cw/bw, ch/bh);
+    var w=bw*s, h=bh*s, x=(cw-w)/2, y=(ch-h)/2;
+    ctx.drawImage(b,x,y,w,h);
+  }
+  function draw(i){
+    if(i<0)i=0; if(i>COUNT-1)i=COUNT-1;
+    var b=bitmaps[i];
+    if(!b){ for(var j=i;j>=0;j--){ if(bitmaps[j]){b=bitmaps[j];break;} } }
+    if(b) drawBmp(b);
+  }
+  function resize(){
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.round(canvas.clientWidth*dpr);
+    canvas.height=Math.round(canvas.clientHeight*dpr);
+    draw(Math.round(cur));
+  }
+  function load(i){
+    if(bitmaps[i]) return Promise.resolve(bitmaps[i]);
+    return fetch(url(i)).then(function(r){return r.blob();})
+      .then(function(bl){return createImageBitmap(bl);})
+      .then(function(bm){bitmaps[i]=bm;return bm;})
+      .catch(function(){return null;});
+  }
+  function idle(){
+    if(lowest>=COUNT) return;
+    var end=Math.min(lowest+8,COUNT), batch=[];
+    for(var i=lowest;i<end;i++) batch.push(load(i));
+    lowest=end;
+    Promise.all(batch).then(function(){ (window.requestIdleCallback||function(f){setTimeout(f,200);})(idle); });
+  }
+  function preload(){
+    var n=Math.min(24,COUNT), first=[];
+    for(var i=0;i<n;i++) first.push(load(i));
+    return Promise.all(first).then(function(){
+      lowest=n; hero.classList.add('ready'); draw(Math.round(cur)); idle(); enter();
+    });
+  }
+  function enter(){
+    // staggered settle on a fresh load; skip if arriving mid-scrub
+    if(progress()>0.05){ document.body.classList.add('no-enter'); return; }
+    document.body.classList.add('loaded');
+    document.querySelectorAll('.enter').forEach(function(el){
+      el.addEventListener('animationend',function(){
+        el.classList.remove('enter'); el.style.animation='none';   // hand opacity back to the scrub choreography
+      },{once:true});
+    });
+  }
+
+  function progress(){
+    if(isFinite(fixed)) return Math.max(0,Math.min(1,fixed));
+    var total=hero.offsetHeight-window.innerHeight;
+    return total>0 ? Math.max(0,Math.min(1,(-hero.getBoundingClientRect().top)/total)) : 0;
+  }
+  function tick(){
+    var p=progress();
+    target=p*(COUNT-1);
+    var ease=isFinite(fixed)?1:0.12;        // capture = snap; live = momentum coast
+    cur += (target-cur)*ease;
+    if(Math.abs(target-cur)<0.01) cur=target;
+    draw(Math.round(cur));
+    choreo(p);
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  if(reduce){                                // accessibility: one static frame, no scrubbing
+    document.body.classList.add('no-enter');
+    load(0).then(function(){hero.classList.add('ready');draw(0);});
+    choreo(0);
+    return;
+  }
+  if(isFinite(fixed)){                        // headless capture of a single position
+    document.body.classList.add('no-enter');
+    var fi=Math.round(progress()*(COUNT-1));
+    load(fi).then(function(){cur=target=fi;hero.classList.add('ready');draw(fi);});
+    choreo(progress());
+    return;
+  }
+  preload();
+  requestAnimationFrame(tick);
+
+  // split the lede into visual lines, each in an overflow mask (reel-style reveal)
+  function splitLines(el){
+    var words=el.textContent.trim().split(/\s+/);
+    el.textContent='';
+    var spans=words.map(function(w){
+      var s=document.createElement('span');
+      s.textContent=w+' '; s.style.display='inline-block';
+      el.appendChild(s); return s;
+    });
+    var lines=[], top=null, cur=[];
+    spans.forEach(function(s){
+      if(top===null||Math.abs(s.offsetTop-top)>4){ if(cur.length)lines.push(cur); cur=[]; top=s.offsetTop; }
+      cur.push(s);
+    });
+    if(cur.length)lines.push(cur);
+    el.textContent='';
+    return lines.map(function(ws){
+      var mask=document.createElement('span'); mask.className='line-mask';
+      var line=document.createElement('span'); line.className='line';
+      line.textContent=ws.map(function(s){return s.textContent;}).join('');
+      mask.appendChild(line); el.appendChild(mask); return line;
+    });
+  }
+  var ledeLines=[];
+  document.querySelectorAll('.split').forEach(function(el){ ledeLines=ledeLines.concat(splitLines(el)); });
+
+  // about-section reveals: blocks stagger, then the lede rises line by line
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        var kids=e.target.querySelectorAll('.reveal');
+        kids.forEach(function(k,i){ setTimeout(function(){k.classList.add('in');}, i*160); });
+        ledeLines.forEach(function(l,i){ setTimeout(function(){l.classList.add('in');}, 260+i*140); });
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:.35});
+  io.observe(document.querySelector('.about-inner'));
+})();
+</script>
+</body></html>

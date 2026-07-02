@@ -1,0 +1,121 @@
+/* Northlight paint-roller hero — reverse-engineering exercise */
+:root{
+  --wall:#edeae1;          /* warm off-white wall */
+  --wall-2:#e6e2d7;
+  --paint:#8c9c70;         /* sage green — sampled from the real emulsion render */
+  --ink:#2e2c26;           /* soft charcoal */
+  --ghost:#bcb7aa;         /* low-contrast "disappearing" headline */
+  --ghost-2:#a9a496;
+  --f-serif:"Fraunces",Georgia,serif;
+  --f-ui:"Inter",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--wall);color:var(--ink)}
+body{font-family:var(--f-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{display:block}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto 0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:22px clamp(22px,4vw,54px);mix-blend-mode:multiply}
+.brand{display:inline-flex;align-items:center;gap:.5em;font-family:var(--f-serif);font-weight:500;font-size:1.15rem;
+  letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.brand .dot{width:7px;height:7px;border-radius:50%;background:var(--paint)}
+.nav-links{display:flex;align-items:center;gap:clamp(16px,2.2vw,30px)}
+.nav-links a{color:#6f6b60;font-size:.9rem;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-links .pill{border:1px solid #b9b4a6;border-radius:100px;padding:.5em 1.1em;color:var(--ink)}
+
+/* hero */
+.hero{position:relative;height:100vh;overflow:hidden;background:var(--wall)}
+.wall{position:absolute;inset:0;
+  /* real photographic matte wall (Higgsfield), colour-matched to the cream palette */
+  background:var(--wall) url(assets/wall.png) center/cover no-repeat;
+}
+.wall::after{ /* soft grounding vignette so the frame edges settle */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(155% 130% at 50% 36%, transparent 54%, rgba(58,52,42,.10) 100%);
+  mix-blend-mode:multiply;
+}
+
+/* paint column — real emulsion texture, centred; clip-path band grows with scroll.
+   bg scaled to 100% x 112% so the render's ragged top/bottom bleed off-frame,
+   leaving the feathered hand-cut SIDE edges reading over the wall. */
+.paint{position:absolute;top:0;left:50%;z-index:1;
+  width:clamp(146px,14.3vw,235px);height:100%;transform:translateX(-50%);
+  background:url(assets/paint.png) center center/100% 112% no-repeat;
+  /* wet paint sits proud of the wall: a whisper of shadow seats the side edges */
+  filter:drop-shadow(0 1px 1.5px rgba(52,60,38,.16));
+  clip-path:inset(100% 0 100% 0);will-change:clip-path}
+.paint::after{ /* subtle top-light sheen so the fresh coat reads wet, not flat */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(102deg, rgba(255,255,255,.14) 0%, transparent 34%, transparent 72%, rgba(30,36,20,.07) 100%);
+  mix-blend-mode:soft-light}
+
+/* roller */
+.svg-defs{position:absolute;width:0;height:0;pointer-events:none;overflow:hidden}
+.roller{position:absolute;top:0;left:50%;z-index:3;width:clamp(158px,15.5vw,255px);
+  transform:translate3d(-50%,0,0);will-change:transform,opacity}
+.roller-img{position:relative;width:100%;height:auto;display:block;
+  /* velocity motion-blur (0 at rest) + a tight contact AO to seat it.
+     the PROMINENT directional shadow is the projected .roller-cast layer below */
+  filter:
+    url(#rollblur)
+    drop-shadow(0 3px 3px rgba(24,22,14,.28))}
+
+/* projected cast shadow — sun on the RIGHT, so the silhouette is thrown to the LEFT and
+   slightly down. transform-origin at the sleeve: the shadow hugs the near-wall sleeve
+   (thin sliver) and swings long-left under the protruding handle — exactly the reel. */
+.roller-cast{position:absolute;top:0;left:0;width:100%;height:auto;display:block;
+  filter:brightness(0) blur(6.5px);
+  opacity:.44;
+  transform-origin:50% 10%;
+  /* small translate keeps the near-wall SLEEVE shadow hidden behind the sleeve;
+     the skew swings the protruding HANDLE's shadow long to the left (sun on the right) */
+  transform:translate(-3.5%, 2.5%) skewX(-14deg);
+  pointer-events:none}
+
+/* the rolling cue — nap ridges wrapping the sleeve cylinder; JS scrolls them vertically
+   with travel (rotation) and fades opacity in with velocity (only reads while moving) */
+.sleeve-nap{position:absolute;top:1.3%;left:1.5%;width:88.5%;height:20.5%;
+  pointer-events:none;opacity:0;border-radius:50%/50%;
+  background:repeating-linear-gradient(180deg,
+    rgba(30,34,20,.16) 0px, rgba(30,34,20,0) 2.5px,
+    rgba(255,255,245,.14) 5px, rgba(30,34,20,0) 8px);
+  background-size:100% 13px;
+  mix-blend-mode:soft-light;
+  -webkit-mask:radial-gradient(120% 96% at 50% 46%, #000 52%, transparent 80%);
+          mask:radial-gradient(120% 96% at 50% 46%, #000 52%, transparent 80%);
+  will-change:opacity,background-position}
+
+/* headline beats */
+.beats{position:absolute;inset:0;z-index:2;display:grid;place-items:center;text-align:center;pointer-events:none;
+  transform:translateY(-11vh)}
+.beat{grid-area:1/1;display:flex;flex-direction:column;align-items:center;gap:1.1rem;opacity:0;transition:opacity .5s ease;
+  padding-bottom:6vh}
+.beat.is-on{opacity:1}
+.eyebrow{font-family:var(--f-ui);font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--paint);
+  font-weight:500}
+.eyebrow.dark{color:#7d7869}
+.beat h1{font-family:var(--f-serif);font-weight:340;font-size:clamp(3rem,7.2vw,6.6rem);line-height:.98;
+  letter-spacing:-.015em;color:var(--ghost);font-optical-sizing:auto}
+.beat h1 em{font-style:italic;font-weight:340;color:var(--ghost-2)}
+.beat .sub{font-family:var(--f-ui);font-size:clamp(.9rem,1.15vw,1.05rem);line-height:1.5;color:#8f8a7c;max-width:44ch}
+
+/* scroll cue */
+.scroll-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:4;
+  font-family:var(--f-ui);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:#8f8a7c}
+
+/* release section */
+.after{min-height:100vh;display:grid;place-items:center;background:var(--wall);padding:8vh 6vw}
+.after-inner{max-width:760px;text-align:center;display:flex;flex-direction:column;gap:1.2rem;align-items:center}
+.after h2{font-family:var(--f-serif);font-weight:360;font-size:clamp(2.2rem,5vw,4rem);line-height:1.02;
+  letter-spacing:-.02em;color:var(--ink)}
+.after p{color:#6f6b60;font-size:1.1rem;max-width:48ch}
+
+@media (prefers-reduced-motion:reduce){
+  .roller{display:none}
+  .paint{clip-path:inset(0 0 5% 0)}   /* show the finished stripe statically */
+  .beat[data-beat="2"]{opacity:1}
+  .beat[data-beat="0"],.beat[data-beat="1"]{opacity:0}
+  .scroll-cue{display:none}
+}

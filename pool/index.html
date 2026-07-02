@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sereno Pools — Custom Inground Pools &amp; Outdoor Living · Austin, TX</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C12 2 5 10.5 5 15a7 7 0 0 0 14 0C19 10.5 12 2 12 2Z' fill='%2329b8cc'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0001.webp" type="image/webp">
+<style>
+  :root{
+    --teal:#10505c;          /* deep brand teal (stats band, form) */
+    --teal-ink:#0b3a44;
+    --aqua:#29b8cc;          /* droplet / accents */
+    --aqua-soft:#8fd8e2;     /* hero eyebrow over footage */
+    --paper:#fbfaf7;
+    --ink:#152528;
+    --mut:#6b7a7d;
+    --hair:rgba(21,37,40,.12);
+    --hair-w:rgba(255,255,255,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:auto}
+  body{background:var(--ink);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--aqua);color:#fff}
+  img{display:block;max-width:100%}
+  .serif{font-family:'Fraunces',serif;font-weight:300}
+
+  /* ===== nav (fixed, glass over hero -> solid after) ===== */
+  #nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
+    padding:1.05rem 2.4rem;transition:background .45s ease,box-shadow .45s ease,padding .45s ease;color:#fff}
+  #nav .brand{display:flex;align-items:center;gap:.5rem;font-family:'Fraunces',serif;font-weight:400;
+    font-size:1.25rem;letter-spacing:.01em;text-decoration:none;color:inherit}
+  #nav .brand svg{width:15px;height:15px;flex:none}
+  #nav .links{display:flex;align-items:center;gap:2rem;font-size:.83rem;font-weight:500}
+  #nav .links a{color:inherit;text-decoration:none;opacity:.88;transition:opacity .2s}
+  #nav .links a:hover{opacity:1}
+  #nav .links a.quote{margin-left:.6rem;background:var(--teal);color:#fff;opacity:1;text-decoration:none;font-size:.83rem;font-weight:600;
+    padding:.62rem 1.25rem;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+    transition:transform .2s ease,background .2s ease}
+  #nav .links a.quote:hover{transform:translateY(-1px);background:#186475}
+  body:not(.past-hero) #nav{text-shadow:0 1px 12px rgba(0,20,25,.45)}
+  body.past-hero #nav{background:rgba(251,250,247,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--ink);box-shadow:0 1px 0 var(--hair);padding:.8rem 2.4rem;text-shadow:none}
+  body.past-hero #nav .links a.quote{border-color:transparent;color:#fff}
+
+  /* ===== hero scrub stage ===== */
+  #hero{position:relative;height:800vh;background:var(--ink)}
+  #stick{position:sticky;top:0;height:100vh;overflow:hidden}
+  #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .3s ease}
+  #hero-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #hero.ready #hero-canvas{opacity:1}
+  #hero.ready #hero-poster{opacity:0;transition:opacity .3s ease}
+  /* cinematic legibility grade — mirrors the reel's soft top+bottom vignette */
+  #stick::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(4,18,22,.44) 0%,rgba(4,18,22,0) 24%,rgba(4,18,22,0) 58%,rgba(4,18,22,.5) 100%)}
+
+  #ui{position:absolute;inset:0;z-index:3;pointer-events:none}
+
+  .headline{position:absolute;left:2.6rem;top:24%;max-width:46rem}
+  .hero-eyebrow{font-size:.7rem;letter-spacing:.32em;font-weight:600;color:var(--aqua-soft);margin-bottom:1.2rem}
+  h1{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(3.2rem,6.6vw,5.9rem);
+    line-height:1.04;letter-spacing:-.005em;color:#fff;text-shadow:0 2px 26px rgba(0,20,25,.35)}
+
+  /* phase caption, bottom-left, with progress hairline (reel signature) */
+  .caption{position:absolute;left:2.6rem;bottom:2.4rem;max-width:26rem}
+  .cap-eyebrow{font-size:.64rem;letter-spacing:.3em;font-weight:600;color:var(--aqua-soft);margin-bottom:.55rem;
+    transition:opacity .35s ease,transform .35s ease}
+  .cap-text{font-size:.95rem;line-height:1.5;color:rgba(255,255,255,.94);min-height:2.9rem;
+    transition:opacity .35s ease,transform .35s ease;text-shadow:0 1px 10px rgba(0,20,25,.4)}
+  .caption.swap .cap-eyebrow,.caption.swap .cap-text{opacity:0;transform:translateY(10px)}
+  .cap-track{margin-top:1rem;height:1px;background:rgba(255,255,255,.28);width:100%}
+  .cap-fill{height:100%;width:0;background:#fff;transition:none}
+
+  .scroll-cue{position:absolute;right:2.6rem;bottom:2.4rem;display:flex;align-items:center;gap:.6rem;
+    font-size:.7rem;letter-spacing:.26em;font-weight:600;color:rgba(255,255,255,.85);transition:opacity .5s ease}
+  .scroll-cue .wheel{width:1px;height:26px;background:rgba(255,255,255,.4);position:relative;overflow:hidden}
+  .scroll-cue .wheel::after{content:"";position:absolute;left:0;top:-8px;width:1px;height:8px;background:#fff;
+    animation:drip 1.6s ease-in-out infinite}
+  @keyframes drip{to{top:26px}}
+
+  /* ===== shared section furniture ===== */
+  section{position:relative}
+  .wrap{max-width:74rem;margin:0 auto;padding:0 2.4rem}
+  .kicker{font-size:.64rem;letter-spacing:.32em;font-weight:600;color:var(--aqua);margin-bottom:1.4rem;text-transform:uppercase}
+  h2{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(2.1rem,4vw,3.3rem);line-height:1.12;letter-spacing:-.005em}
+  .reveal{opacity:0;transform:translateY(26px);filter:blur(8px);
+    transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1),filter .9s cubic-bezier(.22,.61,.36,1);
+    transition-delay:var(--rd,0s)}
+  .reveal.in{opacity:1;transform:none;filter:blur(0)}
+
+  /* ===== about ===== */
+  .about{background:var(--paper);color:var(--ink);text-align:center;padding:9rem 0 7.5rem;z-index:4}
+  .about .wrap{max-width:52rem}
+  .about p.lede{margin-top:2.1rem;font-size:1.02rem;line-height:1.75;color:#41514f}
+
+  /* ===== stats band (teal sweep) ===== */
+  .stats{background:var(--paper);padding:0 0 7rem}
+  .stats-band{position:relative;overflow:hidden;border-radius:18px;background:var(--teal);color:#fff;
+    display:grid;grid-template-columns:repeat(4,1fr)}
+  .stats-band::before{content:"";position:absolute;inset:0;background:var(--teal-ink);transform:scaleX(0);
+    transform-origin:left;transition:transform 1.2s cubic-bezier(.22,.61,.36,1)}
+  .stats-band.in::before{transform:scaleX(1)}
+  .stat{position:relative;padding:2.8rem 1.6rem;text-align:center}
+  .stat+.stat{border-left:1px solid rgba(255,255,255,.14)}
+  .stat .n{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(2.2rem,3.6vw,3.2rem);line-height:1}
+  .stat .n sup{font-size:.45em;vertical-align:.7em}
+  .stat .l{margin-top:.65rem;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+
+  /* ===== process ===== */
+  .process{background:var(--paper);color:var(--ink);padding:7rem 0 8rem;text-align:center}
+  .process .sub{margin-top:1.2rem;font-size:.92rem;color:var(--mut)}
+  .steps{margin-top:4rem;display:grid;grid-template-columns:repeat(5,1fr);gap:2rem;text-align:left;
+    border-top:1px solid var(--hair);padding-top:2.4rem}
+  .step .num{font-family:'Fraunces',serif;font-size:.95rem;color:var(--aqua)}
+  .step h3{margin-top:.8rem;font-size:.92rem;font-weight:600;letter-spacing:.01em}
+  .step p{margin-top:.6rem;font-size:.8rem;line-height:1.6;color:var(--mut)}
+
+  /* ===== gallery ===== */
+  .gallery{background:var(--paper);padding:5rem 0 9rem;text-align:center;overflow:hidden}
+  .cluster{margin-top:4rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+  .tile{position:relative;border-radius:14px;overflow:hidden;background:#dfe7e6;aspect-ratio:4/3}
+  .tile img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform .8s cubic-bezier(.22,.61,.36,1)}
+  .tile:hover img{transform:scale(1.01)}
+  .tile .tag{position:absolute;left:.9rem;bottom:.9rem;background:rgba(251,250,247,.92);color:var(--ink);
+    font-size:.66rem;letter-spacing:.08em;font-weight:600;padding:.4rem .7rem;border-radius:999px}
+  .tile.tall{grid-row:span 2;aspect-ratio:auto}
+
+  /* ===== gather (full-bleed lifestyle band) ===== */
+  .gather{position:relative;min-height:88vh;display:flex;align-items:flex-end;color:#fff;overflow:hidden}
+  .gather img.bg{position:absolute;inset:0;width:100%;height:110%;object-fit:cover;top:-10%}
+  .gather::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,22,26,.05) 30%,rgba(6,22,26,.62) 100%)}
+  .gather .wrap{position:relative;z-index:2;padding-bottom:5rem}
+  .gather .kicker{color:var(--aqua-soft)}
+  .gather h2{color:#fff;max-width:30rem}
+  .gather p{margin-top:1.4rem;max-width:30rem;font-size:.92rem;line-height:1.7;color:rgba(255,255,255,.85)}
+
+  /* ===== services ===== */
+  .services{background:var(--paper);color:var(--ink);padding:8rem 0;text-align:center}
+  .svc-grid{margin-top:4rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;text-align:left}
+  .svc{border:1px solid var(--hair);border-radius:14px;padding:1.8rem 1.6rem;background:#fff;
+    transition:transform .35s ease,box-shadow .35s ease}
+  .svc:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(16,80,92,.1)}
+  .svc h3{font-size:.95rem;font-weight:600}
+  .svc p{margin-top:.7rem;font-size:.8rem;line-height:1.65;color:var(--mut)}
+  .svc .ic{width:2rem;height:2rem;border-radius:8px;background:rgba(41,184,204,.12);display:grid;place-items:center;
+    margin-bottom:1.1rem;color:var(--teal);font-size:.9rem}
+
+  /* ===== reviews ===== */
+  .reviews{background:var(--paper);padding:0 0 9rem;text-align:center}
+  .quotes{margin-top:4rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;text-align:left}
+  .quote{border:1px solid var(--hair);border-radius:14px;padding:2rem 1.7rem;background:#fff}
+  .quote .stars{color:var(--aqua);letter-spacing:.2em;font-size:.75rem}
+  .quote p{margin-top:1.1rem;font-family:'Fraunces',serif;font-weight:300;font-size:1.02rem;line-height:1.6;color:#28393c}
+  .quote .who{margin-top:1.4rem;font-size:.72rem;letter-spacing:.1em;font-weight:600;color:var(--mut);text-transform:uppercase}
+
+  /* ===== CTA / form ===== */
+  .cta{background:var(--teal-ink);color:#fff;padding:8rem 0;
+    background-image:radial-gradient(90rem 50rem at 110% -20%,rgba(41,184,204,.18),transparent 60%)}
+  .cta .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:5rem;align-items:start}
+  .cta .kicker{color:var(--aqua-soft)}
+  .cta h2{color:#fff}
+  .cta p.lead{margin-top:1.4rem;font-size:.92rem;line-height:1.7;color:rgba(255,255,255,.78);max-width:26rem}
+  .cta ul{margin-top:2rem;list-style:none;display:grid;gap:.9rem}
+  .cta li{display:flex;gap:.7rem;align-items:flex-start;font-size:.88rem;color:rgba(255,255,255,.9)}
+  .cta li b{color:var(--aqua);font-weight:600}
+  form{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .field{display:grid;gap:.45rem}
+  .field.full{grid-column:1/-1}
+  label{font-size:.66rem;letter-spacing:.18em;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase}
+  input,select,textarea{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;
+    color:#fff;font:inherit;font-size:.88rem;padding:.8rem .95rem;outline:none;transition:border-color .2s,background .2s}
+  input::placeholder,textarea::placeholder{color:rgba(255,255,255,.35)}
+  input:focus,select:focus,textarea:focus{border-color:var(--aqua);background:rgba(255,255,255,.1)}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fd8e2' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right .9rem center}
+  select option{color:var(--ink)}
+  textarea{min-height:6.5rem;resize:vertical}
+  .submit{grid-column:1/-1;background:var(--aqua);color:#062a30;font-weight:600;font-size:.9rem;border:none;
+    border-radius:10px;padding:1rem;cursor:pointer;transition:transform .2s ease,filter .2s ease}
+  .submit:hover{transform:translateY(-2px);filter:brightness(1.06)}
+
+  footer{background:var(--teal-ink);color:rgba(255,255,255,.45);text-align:center;
+    padding:2.2rem 1rem 2.8rem;font-size:.7rem;letter-spacing:.06em;border-top:1px solid rgba(255,255,255,.08)}
+
+  /* entrance choreography (self-removing so scrub owns opacity afterwards) */
+  .enter{opacity:0;transform:translateY(18px);filter:blur(6px)}
+  body.loaded .enter{animation:enterIn 1s cubic-bezier(.22,.61,.36,1) forwards;animation-delay:var(--d,0s)}
+  body.no-enter .enter{opacity:1;transform:none;filter:none;animation:none}
+  @keyframes enterIn{to{opacity:1;transform:none;filter:blur(0)}}
+
+  @media (max-width:900px){
+    #nav .links{display:none}
+    .headline{left:1.4rem;right:1.4rem;top:22%}
+    .caption{left:1.4rem;right:1.4rem;max-width:none}
+    .scroll-cue{display:none}
+    .steps{grid-template-columns:1fr 1fr;gap:1.6rem}
+    .cluster,.svc-grid,.quotes{grid-template-columns:1fr}
+    .stats-band{grid-template-columns:1fr 1fr}
+    .stat+.stat{border-left:none}
+    .cta .grid{grid-template-columns:1fr;gap:3rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal,.enter{opacity:1;transform:none;filter:none;transition:none;animation:none !important}
+    .stats-band::before{transition:none}
+  }
+</style></head>
+<body>
+
+<div id="nav">
+  <a class="brand enter" style="--d:.1s" href="#">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 10.5 5 15a7 7 0 0 0 14 0C19 10.5 12 2 12 2Z" fill="#29b8cc"/></svg>
+    <span>Sereno<em style="font-style:normal;color:#29b8cc">.</em></span>
+  </a>
+  <div class="links enter" style="--d:.2s">
+    <a href="#process">Process</a><a href="#gallery">Gallery</a><a href="#services">Services</a><a href="#reviews">Reviews</a>
+    <a class="quote" href="#quote">Get a quote</a>
+  </div>
+</div>
+
+<section id="hero" aria-label="Scroll to build your backyard — a Sereno pool assembles as you scroll">
+  <div id="stick">
+    <img id="hero-poster" src="frames/desktop/frame_0001.webp" alt="" fetchpriority="high" decoding="async" width="1920" height="1080">
+    <canvas id="hero-canvas"></canvas>
+    <div id="ui">
+      <div class="headline">
+        <div class="hero-eyebrow enter" style="--d:.45s">SERENO POOLS &middot; AUSTIN, TX</div>
+        <h1 class="enter" style="--d:.55s">Scroll to build<br>your backyard.</h1>
+      </div>
+      <div class="caption" id="caption">
+        <div class="cap-eyebrow enter" style="--d:.8s" id="capEyebrow">01 — THE GRASS</div>
+        <div class="cap-text enter" style="--d:.9s" id="capText">Every great pool starts as a patch of grass.</div>
+        <div class="cap-track enter" style="--d:1s"><div class="cap-fill" id="capFill"></div></div>
+      </div>
+      <div class="scroll-cue enter" style="--d:1.15s" id="cue"><span>SCROLL</span><span class="wheel"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="about">
+  <div class="wrap">
+    <div class="kicker reveal">Custom Inground Pools &amp; Outdoor Living</div>
+    <h2 class="reveal" style="--rd:.12s">We build backyards you<br>never want to leave.</h2>
+    <p class="lede reveal" style="--rd:.24s">For eighteen years, Sereno has designed and built custom pools across Austin
+      and the Hill Country — one site, one crew, one fixed plan you can actually trust. No surprises.
+      Just the best room in the house, and it happens to be outside.</p>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="wrap">
+    <div class="stats-band" id="statsband">
+      <div class="stat"><div class="n" data-count="18">0</div><div class="l">Years designing &amp; building</div></div>
+      <div class="stat"><div class="n" data-count="600">0</div><div class="l">Pools delivered</div></div>
+      <div class="stat"><div class="n" data-count="25"><span></span><sup>yr</sup></div><div class="l">Structural warranty</div></div>
+      <div class="stat"><div class="n" data-count="4.9">0</div><div class="l">Across 400+ reviews</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="process" id="process">
+  <div class="wrap">
+    <div class="kicker reveal">The Process</div>
+    <h2 class="reveal" style="--rd:.12s">Five steps. Zero guesswork.</h2>
+    <p class="sub reveal" style="--rd:.2s">You watched it happen up top. Here's what's actually going on under the surface.</p>
+    <div class="steps">
+      <div class="step reveal" style="--rd:.1s"><div class="num">01</div><h3>Design &amp; 3D plan</h3><p>Site walk, soil check, and a 3D model of your yard you can approve before a single shovel moves.</p></div>
+      <div class="step reveal" style="--rd:.2s"><div class="num">02</div><h3>Excavate &amp; engineer</h3><p>We dig, frame, and steel-reinforce — engineered to Texas soil, inspected at every hold point.</p></div>
+      <div class="step reveal" style="--rd:.3s"><div class="num">03</div><h3>Gunite, tile &amp; coping</h3><p>Gunite shell cured properly, hand-set waterline tile, stone coping cut to fit. Precision.</p></div>
+      <div class="step reveal" style="--rd:.4s"><div class="num">04</div><h3>Plaster, fill &amp; start-up</h3><p>Plaster finish, fill, water chemistry balanced, and equipment dialled in by our own techs.</p></div>
+      <div class="step reveal" style="--rd:.5s"><div class="num">05</div><h3>Dive in</h3><p>Walkthrough, care handbook, and a 25-year structural warranty. Then it's cannonball season.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery" id="gallery">
+  <div class="wrap">
+    <div class="kicker reveal">Selected Work</div>
+    <h2 class="reveal" style="--rd:.12s">A few we're proud of.</h2>
+    <div class="cluster">
+      <div class="tile reveal" style="--rd:.1s"><img src="assets/g1.webp" alt="Geometric pool with tanning ledge" loading="lazy"><span class="tag">Barton Creek — Geometric</span></div>
+      <div class="tile reveal" style="--rd:.18s"><img src="assets/g2.webp" alt="Spa spillover at dusk" loading="lazy"><span class="tag">Westlake — Spa spillover</span></div>
+      <div class="tile reveal" style="--rd:.26s"><img src="assets/g3.webp" alt="Pool with outdoor kitchen" loading="lazy"><span class="tag">Dripping Springs — Outdoor kitchen</span></div>
+      <div class="tile reveal" style="--rd:.34s"><img src="assets/g4.webp" alt="Night lit pool" loading="lazy"><span class="tag">Lakeway — Evening set</span></div>
+      <div class="tile reveal" style="--rd:.42s"><img src="assets/g5.webp" alt="Renovated pool" loading="lazy"><span class="tag">Tarrytown — Full remodel</span></div>
+      <div class="tile reveal" style="--rd:.5s"><img src="assets/g6.webp" alt="Family pool with lawn" loading="lazy"><span class="tag">Hill Country — Family classic</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="gather">
+  <img class="bg" id="gatherbg" src="assets/gather.webp" alt="Evening gathering around a Sereno pool under string lights">
+  <div class="wrap">
+    <div class="kicker reveal">Poolside Living</div>
+    <h2 class="reveal" style="--rd:.12s">More than a pool.<br>A place to gather.</h2>
+    <p class="reveal" style="--rd:.24s">Pools are just the beginning. We design the whole backyard — kitchens, fire,
+      shade and lighting that turns golden hour into the whole evening.</p>
+  </div>
+</section>
+
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="kicker reveal">Beyond the Pool</div>
+    <h2 class="reveal" style="--rd:.12s">Everything beyond the back door.</h2>
+    <div class="svc-grid">
+      <div class="svc reveal" style="--rd:.1s"><div class="ic">◧</div><h3>Custom inground pools</h3><p>Gunite pools designed around how you'll actually use them — tanning ledges, benches, depth done right.</p></div>
+      <div class="svc reveal" style="--rd:.18s"><div class="ic">≋</div><h3>Spas &amp; hot tubs</h3><p>Attached spillover spas and standalone builds, plumbed for real hydrotherapy, not just show.</p></div>
+      <div class="svc reveal" style="--rd:.26s"><div class="ic">⌂</div><h3>Outdoor kitchens &amp; living</h3><p>Kitchens, pergolas, fire features and decks that make the yard the most-used room in the house.</p></div>
+      <div class="svc reveal" style="--rd:.34s"><div class="ic">✦</div><h3>Lighting &amp; automation</h3><p>Scene lighting, smart pumps and app control — the pool runs itself and looks incredible at night.</p></div>
+      <div class="svc reveal" style="--rd:.42s"><div class="ic">↻</div><h3>Renovations &amp; remodels</h3><p>Resurfacing, retiling, equipment swaps and full transformations of tired pools.</p></div>
+      <div class="svc reveal" style="--rd:.5s"><div class="ic">✓</div><h3>Service &amp; maintenance</h3><p>Weekly care, chemistry and seasonal start-up/shutdown from the crew that built it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="reviews" id="reviews">
+  <div class="wrap">
+    <div class="kicker reveal">Reviews</div>
+    <h2 class="reveal" style="--rd:.12s">Word travels in the cul-de-sac.</h2>
+    <div class="quotes">
+      <div class="quote reveal" style="--rd:.1s"><div class="stars">★★★★★</div><p>"They quoted a number and a date. It cost that number, and it was done by that date. In pool building that's a miracle."</p><div class="who">Melissa &amp; Dan R — Circle C Ranch</div></div>
+      <div class="quote reveal" style="--rd:.22s"><div class="stars">★★★★★</div><p>"The 3D design sold us, but the site crew won us. Same five guys, every day, until the water was blue."</p><div class="who">Priya S — Steiner Ranch</div></div>
+      <div class="quote reveal" style="--rd:.34s"><div class="stars">★★★★★</div><p>"Three neighbours have hired them since ours went in. Our backyard is now the default Fourth of July venue."</p><div class="who">The Hollands — Georgetown</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="quote">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <div class="kicker reveal">Free Design Consult</div>
+        <h2 class="reveal" style="--rd:.12s">Let's design your backyard.</h2>
+        <p class="lead reveal" style="--rd:.2s">Tell us a little about your space. We'll follow up to schedule an
+          on-site visit and a 3D concept — no pressure, no obligation.</p>
+        <ul>
+          <li class="reveal" style="--rd:.28s"><b>✓</b> On-site evaluation &amp; soil check</li>
+          <li class="reveal" style="--rd:.36s"><b>✓</b> 3D design with a fixed, itemised quote</li>
+          <li class="reveal" style="--rd:.44s"><b>✓</b> Financing options available</li>
+        </ul>
+      </div>
+      <form class="reveal" style="--rd:.2s" onsubmit="return false">
+        <div class="field"><label for="f-name">Name</label><input id="f-name" placeholder="Your name"></div>
+        <div class="field"><label for="f-email">Email</label><input id="f-email" type="email" placeholder="you@email.com"></div>
+        <div class="field"><label for="f-phone">Phone</label><input id="f-phone" type="tel" placeholder="(512) 555-0134"></div>
+        <div class="field"><label for="f-project">Project</label><select id="f-project"><option>New inground pool</option><option>Pool + outdoor living</option><option>Renovation / remodel</option><option>Spa or water feature</option></select></div>
+        <div class="field full"><label for="f-budget">Budget</label><select id="f-budget"><option>Prefer not to say</option><option>$75k – $110k</option><option>$110k – $160k</option><option>$160k+</option></select></div>
+        <div class="field full"><label for="f-msg">Tell us about your yard</label><textarea id="f-msg" placeholder="Lot size, slope, trees, dream features…"></textarea></div>
+        <button class="submit" type="submit">Request my design consult</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>SERENO POOLS — internal craft test, not a real business. Reverse-engineered from an IG reel benchmark. Last updated: 2026-07-02 11:20 AEST</footer>
+
+<script src="assets/lenis.min.js"></script>
+<script>
+(function(){
+  var FRAME_COUNT=431, FORMAT="webp";               // 5 Seedance clips @12fps via make_frames.py
+  var DIR="frames/desktop";
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function pad(n){n=''+n;while(n.length<4)n='0'+n;return n;}
+  function url(i){return DIR+'/frame_'+pad(i+1)+'.'+FORMAT;}
+
+  var hero=document.getElementById('hero');
+  var canvas=document.getElementById('hero-canvas');
+  var ctx=canvas.getContext('2d',{alpha:false});
+  var bitmaps=new Array(FRAME_COUNT), pending=new Array(FRAME_COUNT), decoded=0;
+  var MAX_DECODED=130, KEY_STRIDE=10, keyframes={};   // sparse lattice survives eviction
+  var cur=0, target=0;
+  var fixed=parseFloat((location.hash||'').replace('#',''));   // #0.5 -> lock playhead for capture
+  var lenis=null;   // smooth-wheel momentum — the biggest single "video feel" contributor
+
+  /* phase captions — fractions tuned to the clip boundaries */
+  var PHASES=[
+    [0.00,'01 — THE GRASS','Every great pool starts as a patch of grass.'],
+    [0.06,'02 — THE DIG','We dig, frame, and steel-reinforce — engineered to Texas soil.'],
+    [0.43,'03 — THE BUILD','Gunite shell. Hand-set tile. Stone coping. Precision.'],
+    [0.80,'04 — THE WEEKEND','Fill it, balance it — then dive in.']
+  ];
+  var caption=document.getElementById('caption');
+  var capEyebrow=document.getElementById('capEyebrow');
+  var capText=document.getElementById('capText');
+  var capFill=document.getElementById('capFill');
+  var cue=document.getElementById('cue');
+  var phaseIdx=0, swapping=false;
+
+  function setPhase(i){
+    if(i===phaseIdx||swapping)return;
+    swapping=true; caption.classList.add('swap');
+    setTimeout(function(){
+      capEyebrow.textContent=PHASES[i][1];
+      capText.textContent=PHASES[i][2];
+      caption.classList.remove('swap');
+      phaseIdx=i; swapping=false;
+    },360);
+  }
+  function choreo(p){
+    capFill.style.width=(p*100)+'%';
+    cue.style.opacity=p<0.03?1:0;
+    var i=0;
+    for(var k=0;k<PHASES.length;k++){ if(p>=PHASES[k][0]) i=k; }
+    setPhase(i);
+    document.body.classList.toggle('past-hero',
+      hero.getBoundingClientRect().bottom<=window.innerHeight+2);
+  }
+
+  function drawBmp(b,alpha){
+    var cw=canvas.width, ch=canvas.height, bw=b.width, bh=b.height;
+    var s=Math.max(cw/bw, ch/bh);
+    var w=bw*s, h=bh*s, x=(cw-w)/2, y=(ch-h)/2;
+    ctx.globalAlpha=alpha; ctx.drawImage(b,x,y,w,h); ctx.globalAlpha=1;
+  }
+  window.__scrub={drawn:-1,stale:0,frames:FRAME_COUNT};   // instrumentation for qa/scrubfeel.py
+  function nearest(i){
+    for(var d=0;d<FRAME_COUNT;d++){
+      if(i-d>=0&&bitmaps[i-d])return i-d;
+      if(i+d<FRAME_COUNT&&bitmaps[i+d])return i+d;
+    }
+    return -1;
+  }
+  function draw(x){
+    if(x<0)x=0; if(x>FRAME_COUNT-1)x=FRAME_COUNT-1;
+    var i=Math.floor(x), f=x-i;
+    var a=bitmaps[i];
+    if(!a){
+      window.__scrub.stale++;
+      var n=nearest(i); if(n<0)return;
+      drawBmp(bitmaps[n],1); window.__scrub.drawn=n; return;
+    }
+    drawBmp(a,1);
+    var b=bitmaps[i+1];
+    if(b&&f>0.03) drawBmp(b,f);          // sub-frame crossfade — motion between frames
+    window.__scrub.drawn=i;
+  }
+  function resize(){
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.round(canvas.clientWidth*dpr);
+    canvas.height=Math.round(canvas.clientHeight*dpr);
+    draw(cur);
+  }
+  function load(i){
+    if(i<0||i>FRAME_COUNT-1||bitmaps[i]||pending[i]) return Promise.resolve(null);
+    pending[i]=1;
+    return fetch(url(i)).then(function(r){return r.blob();})
+      .then(function(bl){return createImageBitmap(bl);})
+      .then(function(bm){bitmaps[i]=bm;decoded++;pending[i]=0;return bm;})
+      .catch(function(){pending[i]=0;return null;});
+  }
+  function evict(center){
+    if(decoded<=MAX_DECODED)return;
+    var worst=-1,dist=-1;
+    for(var i=0;i<FRAME_COUNT;i++){
+      if(!bitmaps[i]||keyframes[i])continue;
+      var d=Math.abs(i-center);
+      if(d>dist){dist=d;worst=i;}
+    }
+    if(worst>=0){ if(bitmaps[worst].close)bitmaps[worst].close(); bitmaps[worst]=null; decoded--; }
+  }
+  function ensureWindow(center,dir){
+    var ahead=56, behind=16;
+    var from=Math.max(0,center-(dir<0?ahead:behind));
+    var to=Math.min(FRAME_COUNT-1,center+(dir<0?behind:ahead));
+    for(var i=from;i<=to;i++) load(i);
+    evict(center); evict(center);
+  }
+  function preload(){
+    var first=[];
+    for(var i=0;i<24;i++) first.push(load(i));
+    for(var k=0;k<FRAME_COUNT;k+=KEY_STRIDE){ keyframes[k]=1; load(k); }   // lattice: any jump lands near something
+    keyframes[FRAME_COUNT-1]=1; load(FRAME_COUNT-1);
+    return Promise.all(first).then(function(){
+      hero.classList.add('ready'); draw(cur); enter();
+    });
+  }
+  function enter(){
+    if(progress()>0.05){ document.body.classList.add('no-enter'); return; }
+    document.body.classList.add('loaded');
+    document.querySelectorAll('.enter').forEach(function(el){
+      el.addEventListener('animationend',function(){
+        el.classList.remove('enter'); el.style.animation='none';
+      },{once:true});
+    });
+  }
+
+  function progress(){
+    if(isFinite(fixed)) return Math.max(0,Math.min(1,fixed));
+    var total=hero.offsetHeight-window.innerHeight;
+    return total>0 ? Math.max(0,Math.min(1,(-hero.getBoundingClientRect().top)/total)) : 0;
+  }
+  function tick(t){
+    if(lenis)lenis.raf(t);
+    var p=progress();
+    target=p*(FRAME_COUNT-1);
+    var ease=isFinite(fixed)?1:0.09;
+    cur += (target-cur)*ease;
+    if(Math.abs(target-cur)<0.005) cur=target;
+    ensureWindow(Math.round(cur), target>=cur?1:-1);
+    draw(cur);
+    choreo(p);
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  if(reduce){
+    document.body.classList.add('no-enter');
+    load(0).then(function(){hero.classList.add('ready');draw(0);});
+    choreo(0);
+  } else if(isFinite(fixed)){
+    document.body.classList.add('no-enter');
+    var fi=Math.round(progress()*(FRAME_COUNT-1));
+    load(fi).then(function(){cur=target=fi;hero.classList.add('ready');draw(fi);});
+    choreo(progress());
+  } else {
+    if(window.Lenis) lenis=new Lenis({duration:1.4,smoothWheel:true});
+    preload();
+    requestAnimationFrame(tick);
+  }
+
+  /* section reveals */
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.querySelectorAll('.reveal').forEach(function(k){k.classList.add('in');});
+        if(e.target.querySelector('.stats-band')) statsIn();
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:.3});
+  document.querySelectorAll('section:not(#hero)').forEach(function(s){io.observe(s);});
+
+  /* stats: teal sweep + count-up */
+  var counted=false;
+  function statsIn(){
+    if(counted)return; counted=true;
+    var band=document.getElementById('statsband');
+    band.classList.add('in');
+    band.querySelectorAll('.n').forEach(function(el){
+      var end=parseFloat(el.getAttribute('data-count'));
+      var dec=(''+el.getAttribute('data-count')).indexOf('.')>-1;
+      var t0=null, dur=1400;
+      var sup=el.querySelector('sup'); var span=el.querySelector('span');
+      function step(t){
+        if(!t0)t0=t;
+        var k=Math.min(1,(t-t0)/dur); k=1-Math.pow(1-k,3);
+        var v=dec?(end*k).toFixed(1):Math.round(end*k);
+        if(span){span.textContent=v;} else {el.textContent=v;}
+        if(sup&&!el.contains(sup))el.appendChild(sup);
+        if(k<1)requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* gather band parallax */
+  var gbg=document.getElementById('gatherbg');
+  window.addEventListener('scroll',function(){
+    if(!gbg)return;
+    var r=gbg.parentElement.getBoundingClientRect();
+    if(r.bottom>0&&r.top<window.innerHeight){
+      var k=(r.top+r.height/2-window.innerHeight/2)/window.innerHeight;
+      gbg.style.transform='translateY('+(k*40)+'px)';
+    }
+  },{passive:true});
+})();
+</script>
+</body></html>
