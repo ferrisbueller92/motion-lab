@@ -186,11 +186,7 @@
     <div class="tint"></div>
   </div>
 
-  <!-- scrubbed bridge shots: continuous camera moves that carry the two hard cuts -->
-  <div class="layer" data-bridge="cove-bay">
-    <video muted playsinline preload="metadata" src="assets/bridge-cove-bay.mp4"></video>
-    <div class="tint"></div>
-  </div>
+  <!-- scrubbed bridge shot: the continuous dive that carries bay→wake -->
   <div class="layer" data-bridge="bay-wake">
     <video muted playsinline preload="metadata" src="assets/bridge-bay-wake.mp4"></video>
     <div class="tint"></div>
@@ -417,7 +413,7 @@
     }
   };
   const warmup = (p) => {
-    if (p > 0.01) { warm('cove-bay', B); warm('bay', L); warm('bay-wake', B); }
+    if (p > 0.01) { warm('bay', L); warm('bay-wake', B); }
     if (p > 0.12) warm('wake', L);
     if (p > 0.28) warm('saloon', L);
     if (p > 0.70) { warm('jump', L); warm('splash', L); }
@@ -426,24 +422,33 @@
   const conduct = (p) => {
     warmup(p);
     // --- Act I: three water beats; cuts carried by scrubbed bridge shots when available
-    const cut1 = seg(p, 0.108, 0.142), cut2 = seg(p, 0.215, 0.285);
-    const b1 = setBridge('cove-bay', (p >= 0.108 && p <= 0.142) ? cut1 : -1);
-    const b2 = setBridge('bay-wake', (p >= 0.215 && p <= 0.285) ? cut2 : -1);
-    const coveO = band(p, -1, 0, 0.108, 0.142) * (1 - b1 * 0.9);
-    const bayO  = band(p, 0.108, 0.142, 0.215, 0.285) * (1 - Math.max(b1, b2) * 0.9);
-    const wakeO = band(p, 0.215, 0.285, 0.345, 0.372) * (1 - b2 * 0.9);
-    setLayer('cove', coveO, 1 + cut1 * 0.05, 1 + cut1 * (1 - cut1) * 0.9);
-    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.100, 0.165)) * 0.04 + easeIO(cut2) * 0.14, 1 + cut2 * (1 - cut2) * 0.9);
-    setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.215, 0.300)) * 0.04);
-    // luminance haze peaks mid-cut (softer when a bridge is carrying it)
-    const hazePeak = Math.max(cut1 * (1 - cut1), cut2 * (1 - cut2)) * 4;
-    veilLumen.style.opacity = ((Math.max(b1, b2) > 0 ? 0.16 : 0.34) * hazePeak).toFixed(3);
+    // cut1 = WHIP-PAN (Dave's camera-turn direction): cove whips out left, bay decelerates in from right
+    // cut2 = the dive — SLOWED (Dave: "way too fast"): 10.5% of timeline + eased scrub
+    const cut1 = seg(p, 0.106, 0.148), cut2 = easeIO(seg(p, 0.205, 0.310));
+    const b2 = setBridge('bay-wake', (p >= 0.205 && p <= 0.310) ? cut2 : -1);
+    const coveO = band(p, -1, 0, 0.118, 0.146);
+    const bayO  = band(p, 0.112, 0.140, 0.205, 0.310) * (1 - b2 * 0.9);
+    const wakeO = band(p, 0.205, 0.310, 0.345, 0.372) * (1 - b2 * 0.9);
+    const whip = easeIO(cut1);
+    const whipSpeed = cut1 * (1 - cut1) * 4;           // 0→1→0, peaks mid-turn
+    setLayer('cove', coveO, 1 + whip * 0.06, 1 + whipSpeed * 0.45);
+    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.106, 0.175)) * 0.04 + cut2 * 0.14, 1 + whipSpeed * 0.45);
+    setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.205, 0.325)) * 0.04);
+    // the camera turn: outgoing slides left with motion blur, incoming arrives from the right and settles
+    L.cove.style.translate = `${(-whip * 30).toFixed(2)}% 0`;
+    L.bay.style.translate = `${(cut1 > 0 && cut1 < 1 ? (1 - whip) * 30 : 0).toFixed(2)}% 0`;
+    if (whipSpeed > 0.02) {
+      const wb = `blur(${(whipSpeed * 12).toFixed(1)}px) brightness(${(1 + whipSpeed * 0.45).toFixed(2)})`;
+      L.cove.style.filter = wb; L.bay.style.filter = wb;
+    }
+    // soft luminance assist on the whip only; the dive carries itself
+    veilLumen.style.opacity = (0.18 * whipSpeed).toFixed(3);
 
     // TEXT PERSISTS ACROSS FOOTAGE CUTS (reel grammar): headline carries through the cove→bay dissolve
-    setCopy('cove', band(p, -1, 0, 0.150, 0.182));
-    setCopy('bay',  band(p, 0.188, 0.216, 0.218, 0.242));
-    setCopy('wake', band(p, 0.292, 0.315, 0.322, 0.348));
-    if (p > 0.292) runCount();
+    setCopy('cove', band(p, -1, 0, 0.152, 0.184));
+    setCopy('bay',  band(p, 0.190, 0.218, 0.235, 0.268));
+    setCopy('wake', band(p, 0.308, 0.330, 0.332, 0.352));
+    if (p > 0.308) runCount();
     q('.scroll-cue').style.opacity = (0.7 * band(p, -1, 0, 0.06, 0.10)).toFixed(2);
 
     // --- dip to dark, into the saloon
@@ -451,7 +456,7 @@
     const saloonO = band(p, 0.362, 0.385, 0.520, 0.560);   // exits under the curtain — else it ghosts through later beats
     setLayer('saloon', saloonO, 1.03 - easeIO(seg(p, 0.362, 0.42)) * 0.03);
     // craft copy enters over the END of the wake beat and rides the dip into the saloon
-    setCopy('saloon', band(p, 0.322, 0.352, 0.462, 0.492));
+    setCopy('saloon', band(p, 0.330, 0.360, 0.462, 0.492));
 
     // --- white curtain rises with the editorial inside
     const rise = easeIO(seg(p, 0.490, 0.535));
