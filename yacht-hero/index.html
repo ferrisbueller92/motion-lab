@@ -181,6 +181,7 @@
   <!-- designed dips -->
   <div class="veil dark" id="veilDark"></div>
   <div class="veil light" id="veilLight"></div>
+  <div class="veil" id="veilLumen" style="background:#fff"></div>
 
   <!-- copy blocks -->
   <div class="copy hero-copy" data-copy="cove">
@@ -302,12 +303,14 @@
   const fleetIntro = q('.fleet-intro');
   const veilDark = q('#veilDark');
   const veilLight = q('#veilLight');
+  const veilLumen = q('#veilLumen');
   const endcard = q('#endcard');
 
-  const setLayer = (name, o, scale = 1) => {
+  const setLayer = (name, o, scale = 1, bright = 1) => {
     const el = L[name]; if (!el) return;
     el.style.opacity = o.toFixed(3);
     el.style.transform = `scale(${scale.toFixed(4)})`;
+    el.style.filter = bright > 1.001 ? `brightness(${bright.toFixed(3)})` : '';
     const v = q('video', el);
     if (v && !v.error && v.readyState >= 2) {
       if (o > 0.02 && v.paused) v.play().catch(() => {});
@@ -364,22 +367,27 @@
     const coveO = band(p, -1, 0, 0.105, 0.135);
     const bayO  = band(p, 0.105, 0.135, 0.225, 0.255);
     const wakeO = band(p, 0.225, 0.255, 0.345, 0.372);
-    // outgoing layers push in slightly (depth), incoming settle from 1.04→1
-    setLayer('cove', coveO, 1 + seg(p, 0.105, 0.135) * 0.05);
-    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.105, 0.150)) * 0.04 + seg(p, 0.225, 0.255) * 0.05);
+    // outgoing layers push in slightly (depth) and lift bright through the cut (reel grammar)
+    const cut1 = seg(p, 0.105, 0.135), cut2 = seg(p, 0.225, 0.255);
+    setLayer('cove', coveO, 1 + cut1 * 0.05, 1 + cut1 * (1 - cut1) * 0.9);
+    setLayer('bay',  bayO,  1.04 - easeIO(seg(p, 0.105, 0.150)) * 0.04 + cut2 * 0.05, 1 + cut2 * (1 - cut2) * 0.9);
     setLayer('wake', wakeO, 1.04 - easeIO(seg(p, 0.225, 0.270)) * 0.04);
+    // luminance haze peaks mid-dissolve so the blend never reads as double-exposure
+    veilLumen.style.opacity = (0.34 * Math.max(cut1 * (1 - cut1) * 4 * 0.25, cut2 * (1 - cut2) * 4 * 0.25) * 4).toFixed(3);
 
-    setCopy('cove', band(p, -1, 0, 0.085, 0.115));
-    setCopy('bay',  band(p, 0.145, 0.175, 0.205, 0.235));
-    setCopy('wake', band(p, 0.265, 0.295, 0.330, 0.355));
-    if (p > 0.265) runCount();
+    // TEXT PERSISTS ACROSS FOOTAGE CUTS (reel grammar): headline carries through the cove→bay dissolve
+    setCopy('cove', band(p, -1, 0, 0.150, 0.182));
+    setCopy('bay',  band(p, 0.188, 0.216, 0.225, 0.252));
+    setCopy('wake', band(p, 0.262, 0.290, 0.306, 0.334));
+    if (p > 0.262) runCount();
     q('.scroll-cue').style.opacity = (0.7 * band(p, -1, 0, 0.06, 0.10)).toFixed(2);
 
     // --- dip to dark, into the saloon
     veilDark.style.opacity = band(p, 0.345, 0.362, 0.368, 0.385).toFixed(3);
     const saloonO = band(p, 0.362, 0.385, 2, 3);   // stays under the curtain
     setLayer('saloon', saloonO, 1.03 - easeIO(seg(p, 0.362, 0.42)) * 0.03);
-    setCopy('saloon', band(p, 0.40, 0.435, 0.465, 0.495));
+    // craft copy enters over the END of the wake beat and rides the dip into the saloon
+    setCopy('saloon', band(p, 0.322, 0.352, 0.462, 0.492));
 
     // --- white curtain rises with the editorial inside
     const rise = easeIO(seg(p, 0.490, 0.535));
@@ -403,7 +411,7 @@
     // curtain leaves upward while the white veil covers the cut
     if (p > 0.810) editorial.style.transform = `translateY(${(-easeIO(seg(p, 0.810, 0.850)) * 100).toFixed(2)}%)`;
     setLayer('splash', band(p, 0.826, 0.850, 2, 3), 1.02 - easeIO(seg(p, 0.826, 0.90)) * 0.02);
-    setCopy('payoff', band(p, 0.875, 0.910, 2, 3), 30);
+    setCopy('payoff', band(p, 0.856, 0.888, 2, 3), 30);
 
     // --- end card
     endcard.style.opacity = band(p, 0.955, 0.985, 2, 3).toFixed(3);
@@ -445,6 +453,10 @@
       if (FREEZE) requestAnimationFrame(frame);
     });
   }
+
+  // hard-loop beats play slower: calmer water, rarer loop seams
+  const RATE = { wake: 0.85, splash: 0.8 };
+  qa('.layer').forEach(el => { const r = RATE[el.dataset.beat]; if (r) q('video', el).playbackRate = r; });
 
   const kick = () => qa('video').forEach(v => { if (!v.error && v.paused && v.closest('.layer').style.opacity > 0.02) v.play().catch(() => {}); });
   addEventListener('touchstart', kick, { once: true, passive: true });
