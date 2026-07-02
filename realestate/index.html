@@ -275,12 +275,12 @@
       .catch(function(){pPending[i]=0;return null;});
   }
   function preloadPreviews(from){
-    if(!PREV_DIR)return;
+    if(!PREV_DIR)return Promise.resolve();
     from=from||0;
-    if(from>=COUNT)return;
+    if(from>=COUNT)return Promise.resolve();
     var batch=[];
     for(var i=from;i<Math.min(from+24,COUNT);i++) batch.push(loadPrev(i));
-    Promise.all(batch).then(function(){ preloadPreviews(from+24); });
+    return Promise.all(batch).then(function(){ return preloadPreviews(from+24); });
   }
   function evict(center){
     if(decoded<=MAX_DECODED)return;
@@ -300,13 +300,15 @@
     evict(center); evict(center);
   }
   function preload(){
-    var first=[];
-    for(var i=0;i<24;i++) first.push(load(i));
-    preloadPreviews(0);
-    for(var k=0;k<COUNT;k+=KEY_STRIDE){ keyframes[k]=1; load(k); }
-    keyframes[COUNT-1]=1; load(COUNT-1);
-    return Promise.all(first).then(function(){
-      hero.classList.add('ready'); draw(cur); enter();
+    // previews FIRST (8MB sweep = whole scrub drawable fast on cold cache), then full tiers
+    var p0=PREV_DIR?loadPrev(0):load(0);
+    p0.then(function(){ hero.classList.add('ready'); draw(cur); enter(); });
+    for(var k=0;k<COUNT;k+=KEY_STRIDE) keyframes[k]=1;
+    keyframes[COUNT-1]=1;
+    return preloadPreviews(0).then(function(){
+      for(var i=0;i<24;i++) load(i);
+      for(var k=0;k<COUNT;k+=KEY_STRIDE) load(k);
+      load(COUNT-1);
     });
   }
   function enter(){
