@@ -292,11 +292,15 @@
     }
     if(worst>=0){ if(bitmaps[worst].close)bitmaps[worst].close(); bitmaps[worst]=null; decoded--; }
   }
+  var prevDone=!PREV_DIR;
   function ensureWindow(center,dir){
     var ahead=56, behind=16;
     var from=Math.max(0,center-(dir<0?ahead:behind));
     var to=Math.min(COUNT-1,center+(dir<0?behind:ahead));
-    for(var i=from;i<=to;i++) load(i);
+    for(var i=from;i<=to;i++){
+      loadPrev(i);                        // previews near the playhead jump the sweep queue
+      if(prevDone) load(i);               // full-res only once the cheap tier is complete
+    }
     evict(center); evict(center);
   }
   function preload(){
@@ -306,6 +310,7 @@
     for(var k=0;k<COUNT;k+=KEY_STRIDE) keyframes[k]=1;
     keyframes[COUNT-1]=1;
     return preloadPreviews(0).then(function(){
+      prevDone=true;
       for(var i=0;i<24;i++) load(i);
       for(var k=0;k<COUNT;k+=KEY_STRIDE) load(k);
       load(COUNT-1);
