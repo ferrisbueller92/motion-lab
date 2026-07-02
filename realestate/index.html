@@ -23,7 +23,7 @@
   ::selection{background:#c8b89a;color:var(--ink)}
 
   /* ===== scrub stage ===== */
-  #hero{position:relative;height:420vh;background:var(--ink)}
+  #hero{position:relative;height:700vh;background:var(--ink)}
   #stick{position:sticky;top:0;height:100vh;overflow:hidden}
   #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .3s ease}
   #hero-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -87,7 +87,7 @@
   .about-inner{max-width:46rem}
   .about .kicker{font-size:.64rem;letter-spacing:.3em;font-weight:600;color:#8a8474;margin-bottom:2.2rem}
   .about h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(1.9rem,3.4vw,2.9rem);margin-bottom:2rem}
-  .about p.lede{font-family:'Instrument Serif',serif;font-size:clamp(1.25rem,2.1vw,1.7rem);line-height:1.5;color:#2a271f}
+  .about p.lede{font-family:'Instrument Serif',serif;font-size:clamp(1.25rem,2.1vw,1.7rem);line-height:1.5;color:#2a271f;text-wrap:balance}
   .about p.foot{margin-top:2.4rem;font-size:.8rem;line-height:1.6;color:#8a8474;max-width:34rem;margin-left:auto;margin-right:auto}
   .reveal{opacity:0;transform:translateY(26px);filter:blur(10px);
     transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1),filter .9s cubic-bezier(.22,.61,.36,1)}
@@ -172,13 +172,15 @@
 
 <footer>VELOURA HEIGHTS — internal craft test. Not a real development. Last updated: 2026-07-02 09:10 AEST</footer>
 
+<script src="assets/lenis.min.js"></script>
 <script>
 (function(){
-  var FRAME_COUNT=178, FORMAT="webp";
+  var FRAME_COUNT=350, FORMAT="webp";               // 4 Seedance clips @12fps + flow-morph junctions (make_frames_v3)
   var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=178;
   var isMobile=matchMedia('(max-width:767px)').matches;
   var DIR=(isMobile&&MOBILE_DIR)?MOBILE_DIR:DESKTOP_DIR;
   var COUNT=(isMobile&&MOBILE_COUNT)?MOBILE_COUNT:FRAME_COUNT;
+  var PREV_DIR=isMobile?null:"frames/preview";      // 480px tier (~8MB): always something to draw
   var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   function pad(n){n=''+n;while(n.length<4)n='0'+n;return n;}
   function url(i){return DIR+'/frame_'+pad(i+1)+'.'+FORMAT;}
@@ -186,9 +188,12 @@
   var hero=document.getElementById('hero');
   var canvas=document.getElementById('hero-canvas');
   var ctx=canvas.getContext('2d',{alpha:false});
-  var bitmaps=new Array(COUNT);
-  var lowest=0;
+  var bitmaps=new Array(COUNT), pending=new Array(COUNT), decoded=0;
+  var previews=new Array(COUNT), pPending=new Array(COUNT);
+  var MAX_DECODED=130, KEY_STRIDE=10, keyframes={};  // sparse lattice survives eviction
+  var MAX_STEP=2.2;                                  // velocity limiter: fast video, never jumps
   var cur=0, target=0;
+  var lenis=null;
   var fixed=parseFloat((location.hash||'').replace('#',''));   // #0.5 -> lock playhead for capture
 
   // overlay elements driven by scrub progress
@@ -199,7 +204,7 @@
   var phase=document.getElementById('phase');
   var pct=document.getElementById('pct');
   var phaselbl=document.getElementById('phaselbl');
-  var PHASES=[[0,'SITE PREPARED'],[.16,'FOUNDATIONS POURED'],[.42,'STRUCTURE RISING'],[.68,'FACADE & GLAZING'],[.9,'RESIDENCE COMPLETE']];
+  var PHASES=[[0,'SITE PREPARED'],[.071,'FOUNDATIONS POURED'],[.317,'STRUCTURE RISING'],[.577,'FACADE & GLAZING'],[.93,'RESIDENCE COMPLETE']];
 
   function fade(el,o){el.style.opacity=o;}
   function choreo(p){
@@ -218,43 +223,90 @@
     phaselbl.textContent=lbl;
   }
 
-  function drawBmp(b){
+  function drawBmp(b,alpha){
     var cw=canvas.width, ch=canvas.height, bw=b.width, bh=b.height;
     var s=Math.max(cw/bw, ch/bh);
     var w=bw*s, h=bh*s, x=(cw-w)/2, y=(ch-h)/2;
-    ctx.drawImage(b,x,y,w,h);
+    ctx.globalAlpha=alpha; ctx.drawImage(b,x,y,w,h); ctx.globalAlpha=1;
   }
-  function draw(i){
-    if(i<0)i=0; if(i>COUNT-1)i=COUNT-1;
-    var b=bitmaps[i];
-    if(!b){ for(var j=i;j>=0;j--){ if(bitmaps[j]){b=bitmaps[j];break;} } }
-    if(b) drawBmp(b);
+  window.__scrub={drawn:-1,stale:0,frames:COUNT};    // instrumentation for qa/scrubfeel.py
+  function pick(i){ return bitmaps[i]||previews[i]; }
+  function nearest(i){
+    for(var d=0;d<COUNT;d++){
+      if(i-d>=0&&pick(i-d))return i-d;
+      if(i+d<COUNT&&pick(i+d))return i+d;
+    }
+    return -1;
+  }
+  function draw(x){
+    if(x<0)x=0; if(x>COUNT-1)x=COUNT-1;
+    var i=Math.floor(x), f=x-i;
+    var a=pick(i);
+    if(!a){
+      window.__scrub.stale++;
+      var n=nearest(i); if(n<0)return;
+      drawBmp(pick(n),1); window.__scrub.drawn=n; return;
+    }
+    drawBmp(a,1);
+    var b=pick(i+1);
+    if(b&&f>0.03) drawBmp(b,f);                      // sub-frame crossfade — motion between frames
+    window.__scrub.drawn=i;
   }
   function resize(){
     var dpr=Math.min(window.devicePixelRatio||1,2);
     canvas.width=Math.round(canvas.clientWidth*dpr);
     canvas.height=Math.round(canvas.clientHeight*dpr);
-    draw(Math.round(cur));
+    draw(cur);
   }
   function load(i){
-    if(bitmaps[i]) return Promise.resolve(bitmaps[i]);
+    if(i<0||i>COUNT-1||bitmaps[i]||pending[i]) return Promise.resolve(null);
+    pending[i]=1;
     return fetch(url(i)).then(function(r){return r.blob();})
       .then(function(bl){return createImageBitmap(bl);})
-      .then(function(bm){bitmaps[i]=bm;return bm;})
-      .catch(function(){return null;});
+      .then(function(bm){bitmaps[i]=bm;decoded++;pending[i]=0;return bm;})
+      .catch(function(){pending[i]=0;return null;});
   }
-  function idle(){
-    if(lowest>=COUNT) return;
-    var end=Math.min(lowest+8,COUNT), batch=[];
-    for(var i=lowest;i<end;i++) batch.push(load(i));
-    lowest=end;
-    Promise.all(batch).then(function(){ (window.requestIdleCallback||function(f){setTimeout(f,200);})(idle); });
+  function loadPrev(i){
+    if(!PREV_DIR||i<0||i>COUNT-1||previews[i]||pPending[i]) return Promise.resolve(null);
+    pPending[i]=1;
+    return fetch(PREV_DIR+'/frame_'+pad(i+1)+'.'+FORMAT).then(function(r){return r.blob();})
+      .then(function(bl){return createImageBitmap(bl);})
+      .then(function(bm){previews[i]=bm;pPending[i]=0;return bm;})
+      .catch(function(){pPending[i]=0;return null;});
+  }
+  function preloadPreviews(from){
+    if(!PREV_DIR)return;
+    from=from||0;
+    if(from>=COUNT)return;
+    var batch=[];
+    for(var i=from;i<Math.min(from+24,COUNT);i++) batch.push(loadPrev(i));
+    Promise.all(batch).then(function(){ preloadPreviews(from+24); });
+  }
+  function evict(center){
+    if(decoded<=MAX_DECODED)return;
+    var worst=-1,dist=-1;
+    for(var i=0;i<COUNT;i++){
+      if(!bitmaps[i]||keyframes[i])continue;
+      var d=Math.abs(i-center);
+      if(d>dist){dist=d;worst=i;}
+    }
+    if(worst>=0){ if(bitmaps[worst].close)bitmaps[worst].close(); bitmaps[worst]=null; decoded--; }
+  }
+  function ensureWindow(center,dir){
+    var ahead=56, behind=16;
+    var from=Math.max(0,center-(dir<0?ahead:behind));
+    var to=Math.min(COUNT-1,center+(dir<0?behind:ahead));
+    for(var i=from;i<=to;i++) load(i);
+    evict(center); evict(center);
   }
   function preload(){
-    var n=Math.min(24,COUNT), first=[];
-    for(var i=0;i<n;i++) first.push(load(i));
+    var first=[];
+    for(var i=0;i<24;i++) first.push(load(i));
+    preloadPreviews(0);
+    for(var k=0;k<COUNT;k+=KEY_STRIDE){ keyframes[k]=1; load(k); }
+    keyframes[COUNT-1]=1; load(COUNT-1);
     return Promise.all(first).then(function(){
-      lowest=n; hero.classList.add('ready'); draw(Math.round(cur)); idle(); enter();
+      hero.classList.add('ready'); draw(cur); enter();
     });
   }
   function enter(){
@@ -273,13 +325,17 @@
     var total=hero.offsetHeight-window.innerHeight;
     return total>0 ? Math.max(0,Math.min(1,(-hero.getBoundingClientRect().top)/total)) : 0;
   }
-  function tick(){
+  function tick(t){
+    if(lenis)lenis.raf(t);
     var p=progress();
     target=p*(COUNT-1);
-    var ease=isFinite(fixed)?1:0.12;        // capture = snap; live = momentum coast
-    cur += (target-cur)*ease;
-    if(Math.abs(target-cur)<0.01) cur=target;
-    draw(Math.round(cur));
+    var ease=isFinite(fixed)?1:0.09;
+    var d=(target-cur)*ease;
+    if(!isFinite(fixed)){ if(d>MAX_STEP)d=MAX_STEP; else if(d<-MAX_STEP)d=-MAX_STEP; }
+    cur += d;
+    if(Math.abs(target-cur)<0.005) cur=target;
+    ensureWindow(Math.round(cur), target>=cur?1:-1);
+    draw(cur);
     choreo(p);
     requestAnimationFrame(tick);
   }
@@ -300,21 +356,26 @@
     choreo(progress());
     return;
   }
+  if(window.Lenis) lenis=new Lenis({duration:1.2,smoothWheel:true});
   preload();
   requestAnimationFrame(tick);
 
   // split the lede into visual lines, each in an overflow mask (reel-style reveal)
   function splitLines(el){
+    // measure with INLINE spans so wrapping matches real text (inline-block boxes wrap differently)
     var words=el.textContent.trim().split(/\s+/);
     el.textContent='';
-    var spans=words.map(function(w){
+    var spans=words.map(function(w,i){
       var s=document.createElement('span');
-      s.textContent=w+' '; s.style.display='inline-block';
-      el.appendChild(s); return s;
+      s.textContent=w;
+      el.appendChild(s);
+      if(i<words.length-1) el.appendChild(document.createTextNode(' '));
+      return s;
     });
     var lines=[], top=null, cur=[];
     spans.forEach(function(s){
-      if(top===null||Math.abs(s.offsetTop-top)>4){ if(cur.length)lines.push(cur); cur=[]; top=s.offsetTop; }
+      var t=s.getBoundingClientRect().top;
+      if(top===null||Math.abs(t-top)>4){ if(cur.length)lines.push(cur); cur=[]; top=t; }
       cur.push(s);
     });
     if(cur.length)lines.push(cur);
@@ -322,12 +383,15 @@
     return lines.map(function(ws){
       var mask=document.createElement('span'); mask.className='line-mask';
       var line=document.createElement('span'); line.className='line';
-      line.textContent=ws.map(function(s){return s.textContent;}).join('');
+      line.textContent=ws.map(function(s){return s.textContent;}).join(' ');
       mask.appendChild(line); el.appendChild(mask); return line;
     });
   }
   var ledeLines=[];
-  document.querySelectorAll('.split').forEach(function(el){ ledeLines=ledeLines.concat(splitLines(el)); });
+  var fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  fontsReady.then(function(){   // split AFTER webfonts load — fallback metrics break the line boxes
+    document.querySelectorAll('.split').forEach(function(el){ ledeLines=ledeLines.concat(splitLines(el)); });
+  });
 
   // about-section reveals: blocks stagger, then the lede rises line by line
   var io=new IntersectionObserver(function(es){
