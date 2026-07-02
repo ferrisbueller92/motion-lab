@@ -107,6 +107,23 @@
     .phase{display:none}
     .scroll-cue{left:1.4rem}
   }
+  /* ===== preloader gate — hold the page until the footage is cached ===== */
+  #loader{position:fixed;inset:0;z-index:60;background:var(--ink);display:grid;place-items:center;
+    transition:opacity .8s ease,visibility .8s ease}
+  #loader.done{opacity:0;visibility:hidden}
+  .ld-inner{text-align:center;width:min(20rem,72vw)}
+  .ld-mark{font-size:.72rem;letter-spacing:.3em;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:1.4rem}
+  .ld-title{font-family:'Instrument Serif',serif;font-size:1.9rem;color:#fff;margin-bottom:2.2rem}
+  .ld-title em{font-style:italic}
+  .ld-track{height:1px;background:rgba(255,255,255,.18);width:100%}
+  .ld-fill{height:100%;width:0;background:#f2ede4;transition:width .3s ease}
+  .ld-pct{margin-top:1rem;font-size:.68rem;letter-spacing:.26em;color:rgba(255,255,255,.55)}
+  .ld-skip{margin-top:2.2rem;font-size:.66rem;letter-spacing:.22em;font-weight:600;color:rgba(255,255,255,.5);
+    background:none;border:none;cursor:pointer;opacity:0;transition:opacity .4s ease,color .2s ease;pointer-events:none}
+  .ld-skip.show{opacity:1;pointer-events:auto}
+  .ld-skip:hover{color:#fff}
+  body.gated{overflow:hidden}
+
   /* entrance choreography — staggered settle on first load */
   .enter{opacity:0;transform:translateY(18px);filter:blur(6px)}
   body.loaded .enter{animation:enterIn 1s cubic-bezier(.22,.61,.36,1) forwards;animation-delay:var(--d,0s)}
@@ -119,7 +136,16 @@
     .line{transform:none;opacity:1;filter:none;transition:none}
   }
 </style></head>
-<body>
+<body class="gated">
+<div id="loader" aria-hidden="true">
+  <div class="ld-inner">
+    <div class="ld-mark">VELOURA GROUP</div>
+    <div class="ld-title">Veloura <em>Heights</em></div>
+    <div class="ld-track"><div class="ld-fill" id="ldFill"></div></div>
+    <div class="ld-pct" id="ldPct">PREPARING THE EXPERIENCE</div>
+    <button class="ld-skip" id="ldSkip">SKIP &rarr;</button>
+  </div>
+</div>
 <section id="hero" aria-label="Veloura Heights — watch it rise as you scroll">
   <div id="stick">
     <picture>
@@ -175,8 +201,8 @@
 <script src="assets/lenis.min.js"></script>
 <script>
 (function(){
-  var FRAME_COUNT=355, FORMAT="webp";               // 4 Seedance clips @12fps + flow-morph junctions (make_frames_v3)
-  var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=355;
+  var FRAME_COUNT=345, FORMAT="webp";               // 4 Seedance clips @12fps + flow-morph junctions (make_frames_v3)
+  var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=345;
   var isMobile=matchMedia('(max-width:767px)').matches;
   var DIR=(isMobile&&MOBILE_DIR)?MOBILE_DIR:DESKTOP_DIR;
   var COUNT=(isMobile&&MOBILE_COUNT)?MOBILE_COUNT:FRAME_COUNT;
@@ -204,7 +230,7 @@
   var phase=document.getElementById('phase');
   var pct=document.getElementById('pct');
   var phaselbl=document.getElementById('phaselbl');
-  var PHASES=[[0,'SITE PREPARED'],[.07,'FOUNDATIONS POURED'],[.313,'STRUCTURE RISING'],[.555,'FACADE & GLAZING'],[.93,'RESIDENCE COMPLETE']];
+  var PHASES=[[0,'SITE PREPARED'],[.072,'FOUNDATIONS POURED'],[.293,'STRUCTURE RISING'],[.557,'FACADE & GLAZING'],[.93,'RESIDENCE COMPLETE']];
 
   function fade(el,o){el.style.opacity=o;}
   function choreo(p){
@@ -258,13 +284,28 @@
     canvas.height=Math.round(canvas.clientHeight*dpr);
     draw(cur);
   }
+  var blobs=new Array(COUNT);
   function load(i){
     if(i<0||i>COUNT-1||bitmaps[i]||pending[i]) return Promise.resolve(null);
     pending[i]=1;
-    return fetch(url(i)).then(function(r){return r.blob();})
-      .then(function(bl){return createImageBitmap(bl);})
+    var src=blobs[i]?Promise.resolve(blobs[i])
+      :fetch(url(i)).then(function(r){return r.blob();}).then(function(bl){blobs[i]=bl;return bl;});
+    return src.then(function(bl){return createImageBitmap(bl);})
       .then(function(bm){bitmaps[i]=bm;decoded++;pending[i]=0;return bm;})
       .catch(function(){pending[i]=0;return null;});
+  }
+  /* preloader gate: pull every frame's BYTES down before the scrub starts (decode stays windowed) */
+  function prefetchAll(onProgress){
+    var next=0, done=0, workers=[];
+    function pump(){
+      if(next>=COUNT) return Promise.resolve();
+      var i=next++;
+      var p=blobs[i]?Promise.resolve():fetch(url(i)).then(function(r){return r.blob();})
+        .then(function(bl){blobs[i]=bl;}).catch(function(){});
+      return p.then(function(){ done++; onProgress(done/COUNT); return pump(); });
+    }
+    for(var w=0;w<10;w++) workers.push(pump());
+    return Promise.all(workers);
   }
   function loadPrev(i){
     if(!PREV_DIR||i<0||i>COUNT-1||previews[i]||pPending[i]) return Promise.resolve(null);
@@ -350,13 +391,20 @@
   window.addEventListener('resize',resize,{passive:true});
   resize();
 
+  function dropGate(){
+    var l=document.getElementById('loader');
+    if(l)l.classList.add('done');
+    document.body.classList.remove('gated');
+  }
   if(reduce){                                // accessibility: one static frame, no scrubbing
+    dropGate();
     document.body.classList.add('no-enter');
     load(0).then(function(){hero.classList.add('ready');draw(0);});
     choreo(0);
     return;
   }
   if(isFinite(fixed)){                        // headless capture of a single position
+    dropGate();
     document.body.classList.add('no-enter');
     var fi=Math.round(progress()*(COUNT-1));
     load(fi).then(function(){cur=target=fi;hero.classList.add('ready');draw(fi);});
@@ -364,7 +412,41 @@
     return;
   }
   if(window.Lenis) lenis=new Lenis({duration:1.2,smoothWheel:true});
-  preload();
+  /* gate: brand loader holds the page while every frame's bytes come down */
+  (function(){
+    var loader=document.getElementById('loader');
+    var fill=document.getElementById('ldFill');
+    var pct=document.getElementById('ldPct');
+    var skip=document.getElementById('ldSkip');
+    var gateOpen=false;
+    function openGate(){
+      if(gateOpen)return; gateOpen=true;
+      loader.classList.add('done');
+      document.body.classList.remove('gated');
+      window.scrollTo(0,0);
+      preload();                                    // decode window + previews (from cached bytes if gated fully)
+    }
+    if(lenis){}                                     // lenis reads native scroll; overflow:hidden gates it
+    setTimeout(function(){skip.classList.add('show');},6000);
+    skip.addEventListener('click',openGate);
+    loadPrev(0).then(function(){draw(0);hero.classList.add('ready');});   // something behind the fade
+    prefetchAll(function(f){
+      fill.style.width=(f*97)+'%';
+      pct.textContent=Math.round(f*97)+'% — PREPARING THE EXPERIENCE';
+    }).then(function(){
+      // pre-decode the sparse lattice + opening window so the first scrub lands on full-res
+      var warm=[];
+      for(var k=0;k<COUNT;k+=KEY_STRIDE){ keyframes[k]=1; warm.push(load(k)); }
+      for(var i=0;i<16;i++) warm.push(load(i));
+      keyframes[COUNT-1]=1; warm.push(load(COUNT-1));
+      return Promise.all(warm);
+    }).then(function(){
+      fill.style.width='100%';
+      pct.textContent='100% — PREPARING THE EXPERIENCE';
+      setTimeout(openGate,250);
+    });
+    setTimeout(openGate,45000);                     // hard failsafe: never trap the user
+  })();
   requestAnimationFrame(tick);
 
   // split the lede into visual lines, each in an overflow mask (reel-style reveal)
