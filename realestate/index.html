@@ -175,8 +175,8 @@
 <script src="assets/lenis.min.js"></script>
 <script>
 (function(){
-  var FRAME_COUNT=350, FORMAT="webp";               // 4 Seedance clips @12fps + flow-morph junctions (make_frames_v3)
-  var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=178;
+  var FRAME_COUNT=355, FORMAT="webp";               // 4 Seedance clips @12fps + flow-morph junctions (make_frames_v3)
+  var DESKTOP_DIR="frames/desktop", MOBILE_DIR="frames/mobile", MOBILE_COUNT=355;
   var isMobile=matchMedia('(max-width:767px)').matches;
   var DIR=(isMobile&&MOBILE_DIR)?MOBILE_DIR:DESKTOP_DIR;
   var COUNT=(isMobile&&MOBILE_COUNT)?MOBILE_COUNT:FRAME_COUNT;
@@ -204,7 +204,7 @@
   var phase=document.getElementById('phase');
   var pct=document.getElementById('pct');
   var phaselbl=document.getElementById('phaselbl');
-  var PHASES=[[0,'SITE PREPARED'],[.071,'FOUNDATIONS POURED'],[.317,'STRUCTURE RISING'],[.577,'FACADE & GLAZING'],[.93,'RESIDENCE COMPLETE']];
+  var PHASES=[[0,'SITE PREPARED'],[.07,'FOUNDATIONS POURED'],[.313,'STRUCTURE RISING'],[.555,'FACADE & GLAZING'],[.93,'RESIDENCE COMPLETE']];
 
   function fade(el,o){el.style.opacity=o;}
   function choreo(p){
