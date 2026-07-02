@@ -367,7 +367,10 @@
   var canvas=document.getElementById('hero-canvas');
   var ctx=canvas.getContext('2d',{alpha:false});
   var bitmaps=new Array(FRAME_COUNT), pending=new Array(FRAME_COUNT), decoded=0;
+  var previews=new Array(FRAME_COUNT), pPending=new Array(FRAME_COUNT), prevLoaded=0;
+  var PREV_DIR="frames/preview";                      // 480px tier (~8MB total): always something to draw
   var MAX_DECODED=130, KEY_STRIDE=10, keyframes={};   // sparse lattice survives eviction
+  var MAX_STEP=2.2;                                   // velocity limiter: never step >2.2 frames per rAF
   var cur=0, target=0;
   var fixed=parseFloat((location.hash||'').replace('#',''));   // #0.5 -> lock playhead for capture
   var lenis=null;   // smooth-wheel momentum — the biggest single "video feel" contributor
@@ -413,24 +416,25 @@
     ctx.globalAlpha=alpha; ctx.drawImage(b,x,y,w,h); ctx.globalAlpha=1;
   }
   window.__scrub={drawn:-1,stale:0,frames:FRAME_COUNT};   // instrumentation for qa/scrubfeel.py
+  function pick(i){ return bitmaps[i]||previews[i]; }
   function nearest(i){
     for(var d=0;d<FRAME_COUNT;d++){
-      if(i-d>=0&&bitmaps[i-d])return i-d;
-      if(i+d<FRAME_COUNT&&bitmaps[i+d])return i+d;
+      if(i-d>=0&&pick(i-d))return i-d;
+      if(i+d<FRAME_COUNT&&pick(i+d))return i+d;
     }
     return -1;
   }
   function draw(x){
     if(x<0)x=0; if(x>FRAME_COUNT-1)x=FRAME_COUNT-1;
     var i=Math.floor(x), f=x-i;
-    var a=bitmaps[i];
+    var a=pick(i);
     if(!a){
       window.__scrub.stale++;
       var n=nearest(i); if(n<0)return;
-      drawBmp(bitmaps[n],1); window.__scrub.drawn=n; return;
+      drawBmp(pick(n),1); window.__scrub.drawn=n; return;
     }
     drawBmp(a,1);
-    var b=bitmaps[i+1];
+    var b=pick(i+1);
     if(b&&f>0.03) drawBmp(b,f);          // sub-frame crossfade — motion between frames
     window.__scrub.drawn=i;
   }
@@ -447,6 +451,21 @@
       .then(function(bl){return createImageBitmap(bl);})
       .then(function(bm){bitmaps[i]=bm;decoded++;pending[i]=0;return bm;})
       .catch(function(){pending[i]=0;return null;});
+  }
+  function loadPrev(i){
+    if(i<0||i>FRAME_COUNT-1||previews[i]||pPending[i]) return Promise.resolve(null);
+    pPending[i]=1;
+    return fetch(PREV_DIR+'/frame_'+pad(i+1)+'.'+FORMAT).then(function(r){return r.blob();})
+      .then(function(bl){return createImageBitmap(bl);})
+      .then(function(bm){previews[i]=bm;prevLoaded++;pPending[i]=0;return bm;})
+      .catch(function(){pPending[i]=0;return null;});
+  }
+  function preloadPreviews(from){   // sweep the whole 8MB preview tier in order, 24 at a time
+    from=from||0;
+    if(from>=FRAME_COUNT)return;
+    var batch=[];
+    for(var i=from;i<Math.min(from+24,FRAME_COUNT);i++) batch.push(loadPrev(i));
+    Promise.all(batch).then(function(){ preloadPreviews(from+24); });
   }
   function evict(center){
     if(decoded<=MAX_DECODED)return;
@@ -468,6 +487,7 @@
   function preload(){
     var first=[];
     for(var i=0;i<24;i++) first.push(load(i));
+    preloadPreviews(0);                                                    // 8MB tier sweeps in fast
     for(var k=0;k<FRAME_COUNT;k+=KEY_STRIDE){ keyframes[k]=1; load(k); }   // lattice: any jump lands near something
     keyframes[FRAME_COUNT-1]=1; load(FRAME_COUNT-1);
     return Promise.all(first).then(function(){
@@ -494,7 +514,9 @@
     var p=progress();
     target=p*(FRAME_COUNT-1);
     var ease=isFinite(fixed)?1:0.09;
-    cur += (target-cur)*ease;
+    var d=(target-cur)*ease;
+    if(!isFinite(fixed)){ if(d>MAX_STEP)d=MAX_STEP; else if(d<-MAX_STEP)d=-MAX_STEP; }  // fast video, never jumps
+    cur += d;
     if(Math.abs(target-cur)<0.005) cur=target;
     ensureWindow(Math.round(cur), target>=cur?1:-1);
     draw(cur);
@@ -515,7 +537,7 @@
     load(fi).then(function(){cur=target=fi;hero.classList.add('ready');draw(fi);});
     choreo(progress());
   } else {
-    if(window.Lenis) lenis=new Lenis({duration:1.4,smoothWheel:true});
+    if(window.Lenis) lenis=new Lenis({duration:1.2,smoothWheel:true});
     preload();
     requestAnimationFrame(tick);
   }
