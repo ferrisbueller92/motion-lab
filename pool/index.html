@@ -5,7 +5,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C12 2 5 10.5 5 15a7 7 0 0 0 14 0C19 10.5 12 2 12 2Z' fill='%2329b8cc'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="preload" as="image" fetchpriority="high" href="frames/desktop/frame_0001.webp" type="image/webp">
 <style>
   :root{
@@ -24,12 +24,12 @@
   body{background:var(--ink);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   ::selection{background:var(--aqua);color:#fff}
   img{display:block;max-width:100%}
-  .serif{font-family:'Fraunces',serif;font-weight:300}
+  .serif{font-family:'Prata',serif}
 
   /* ===== nav (fixed, glass over hero -> solid after) ===== */
   #nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
     padding:1.05rem 2.4rem;transition:background .45s ease,box-shadow .45s ease,padding .45s ease;color:#fff}
-  #nav .brand{display:flex;align-items:center;gap:.5rem;font-family:'Fraunces',serif;font-weight:400;
+  #nav .brand{display:flex;align-items:center;gap:.5rem;font-family:'Prata',serif;font-weight:400;
     font-size:1.25rem;letter-spacing:.01em;text-decoration:none;color:inherit}
   #nav .brand svg{width:15px;height:15px;flex:none}
   #nav .links{display:flex;align-items:center;gap:2rem;font-size:.83rem;font-weight:500}
@@ -53,13 +53,13 @@
   #hero.ready #hero-poster{opacity:0;transition:opacity .3s ease}
   /* cinematic legibility grade — mirrors the reel's soft top+bottom vignette */
   #stick::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(180deg,rgba(4,18,22,.44) 0%,rgba(4,18,22,0) 24%,rgba(4,18,22,0) 58%,rgba(4,18,22,.5) 100%)}
+    background:linear-gradient(180deg,rgba(4,18,22,.44) 0%,rgba(4,18,22,0) 24%,rgba(4,18,22,0) 52%,rgba(4,18,22,.62) 100%)}
 
   #ui{position:absolute;inset:0;z-index:3;pointer-events:none}
 
   .headline{position:absolute;left:2.6rem;top:24%;max-width:46rem}
   .hero-eyebrow{font-size:.7rem;letter-spacing:.32em;font-weight:600;color:var(--aqua-soft);margin-bottom:1.2rem}
-  h1{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(3.2rem,6.6vw,5.9rem);
+  h1{font-family:'Prata',serif;font-weight:400;font-size:clamp(3.2rem,6.6vw,5.9rem);
     line-height:1.04;letter-spacing:-.005em;color:#fff;text-shadow:0 2px 26px rgba(0,20,25,.35)}
 
   /* phase caption, bottom-left, with progress hairline (reel signature) */
@@ -83,7 +83,7 @@
   section{position:relative}
   .wrap{max-width:74rem;margin:0 auto;padding:0 2.4rem}
   .kicker{font-size:.64rem;letter-spacing:.32em;font-weight:600;color:var(--aqua);margin-bottom:1.4rem;text-transform:uppercase}
-  h2{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(2.1rem,4vw,3.3rem);line-height:1.12;letter-spacing:-.005em}
+  h2{font-family:'Prata',serif;font-weight:400;font-size:clamp(2.1rem,4vw,3.3rem);line-height:1.12;letter-spacing:-.005em}
   .reveal{opacity:0;transform:translateY(26px);filter:blur(8px);
     transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1),filter .9s cubic-bezier(.22,.61,.36,1);
     transition-delay:var(--rd,0s)}
@@ -103,7 +103,7 @@
   .stats-band.in::before{transform:scaleX(1)}
   .stat{position:relative;padding:2.8rem 1.6rem;text-align:center}
   .stat+.stat{border-left:1px solid rgba(255,255,255,.14)}
-  .stat .n{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(2.2rem,3.6vw,3.2rem);line-height:1}
+  .stat .n{font-family:'Prata',serif;font-weight:400;font-size:clamp(2.2rem,3.6vw,3.2rem);line-height:1}
   .stat .n sup{font-size:.45em;vertical-align:.7em}
   .stat .l{margin-top:.65rem;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)}
 
@@ -112,7 +112,7 @@
   .process .sub{margin-top:1.2rem;font-size:.92rem;color:var(--mut)}
   .steps{margin-top:4rem;display:grid;grid-template-columns:repeat(5,1fr);gap:2rem;text-align:left;
     border-top:1px solid var(--hair);padding-top:2.4rem}
-  .step .num{font-family:'Fraunces',serif;font-size:.95rem;color:var(--aqua)}
+  .step .num{font-family:'Prata',serif;font-size:.95rem;color:var(--aqua)}
   .step h3{margin-top:.8rem;font-size:.92rem;font-weight:600;letter-spacing:.01em}
   .step p{margin-top:.6rem;font-size:.8rem;line-height:1.6;color:var(--mut)}
 
@@ -151,7 +151,7 @@
   .quotes{margin-top:4rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;text-align:left}
   .quote{border:1px solid var(--hair);border-radius:14px;padding:2rem 1.7rem;background:#fff}
   .quote .stars{color:var(--aqua);letter-spacing:.2em;font-size:.75rem}
-  .quote p{margin-top:1.1rem;font-family:'Fraunces',serif;font-weight:300;font-size:1.02rem;line-height:1.6;color:#28393c}
+  .quote p{margin-top:1.1rem;font-family:'Prata',serif;font-weight:400;font-size:1.02rem;line-height:1.6;color:#28393c}
   .quote .who{margin-top:1.4rem;font-size:.72rem;letter-spacing:.1em;font-weight:600;color:var(--mut);text-transform:uppercase}
 
   /* ===== CTA / form ===== */
@@ -357,7 +357,7 @@
 <script src="assets/lenis.min.js"></script>
 <script>
 (function(){
-  var FRAME_COUNT=448, FORMAT="webp";               // 5 clips @12fps + flow-morph junctions via make_frames.py
+  var FRAME_COUNT=435, FORMAT="webp";               // 5 clips @12fps + flow-morph junctions via make_frames.py
   var DIR="frames/desktop";
   var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   function pad(n){n=''+n;while(n.length<4)n='0'+n;return n;}
@@ -378,9 +378,9 @@
   /* phase captions — fractions tuned to the clip boundaries */
   var PHASES=[
     [0.00,'01 — THE GRASS','Every great pool starts as a patch of grass.'],
-    [0.056,'02 — THE DIG','We dig, frame, and steel-reinforce — engineered to Texas soil.'],
-    [0.426,'03 — THE BUILD','Gunite shell. Hand-set tile. Stone coping. Precision.'],
-    [0.815,'04 — THE WEEKEND','Fill it, balance it — then dive in.']
+    [0.057,'02 — THE DIG','We dig, frame, and steel-reinforce — engineered to Texas soil.'],
+    [0.407,'03 — THE BUILD','Gunite shell. Hand-set tile. Stone coping. Precision.'],
+    [0.809,'04 — THE WEEKEND','Fill it, balance it — then dive in.']
   ];
   var caption=document.getElementById('caption');
   var capEyebrow=document.getElementById('capEyebrow');
